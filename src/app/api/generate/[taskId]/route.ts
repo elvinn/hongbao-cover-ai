@@ -141,9 +141,7 @@ export async function GET(
         } else {
           // 免费用户：生成预览图并上传两个版本
           const previewBuffer = await createPreviewImage(originalBuffer)
-          const host = request.headers.get('host') || 'hongbao.com'
-          const domain = host.replace('www.', '')
-          const watermarkedBuffer = await addWatermark(previewBuffer, domain)
+          const watermarkedBuffer = await addWatermark(previewBuffer)
 
           // 并行上传到 R2
           await Promise.all([

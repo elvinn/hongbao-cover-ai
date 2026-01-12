@@ -1,12 +1,16 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAuth, useClerk } from '@clerk/nextjs'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { type CoverStyle } from '@/types/hongbao'
 import { useSession } from '@/hooks/use-session'
-import { cachePromptForAuth } from '@/utils/prompt-cache'
+import {
+  cachePromptForAuth,
+  getCachedPrompt,
+  clearCachedPrompt,
+} from '@/utils/prompt-cache'
 
 interface GenerationFormProps {
   onGenerate: (description: string) => void
@@ -37,7 +41,10 @@ export function GenerationForm({
   const { redirectToSignIn } = useClerk()
   const { savedInput, saveInput } = useSession()
 
+  // 在初始化时检查并恢复缓存的提示词
   const [description, setDescription] = useState(() => {
+    const cachedPrompt = getCachedPrompt()
+    if (cachedPrompt) return cachedPrompt
     if (savedInput?.description) return savedInput.description
     return initialPrompt
   })
@@ -47,10 +54,21 @@ export function GenerationForm({
   })
   const [error, setError] = useState<string | null>(null)
   const [charCount, setCharCount] = useState(() => {
+    const cachedPrompt = getCachedPrompt()
+    if (cachedPrompt) return cachedPrompt.length
     if (savedInput?.description) return savedInput.description.length
     return initialPrompt.length
   })
   const [hasTouched, setHasTouched] = useState(false)
+
+  // 清除已使用的缓存（只在挂载时执行）
+  const hasClearedCacheRef = useRef(false)
+  useEffect(() => {
+    if (!hasClearedCacheRef.current && getCachedPrompt()) {
+      clearCachedPrompt()
+      hasClearedCacheRef.current = true
+    }
+  }, [])
 
   const handleDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

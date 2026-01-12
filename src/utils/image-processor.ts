@@ -1,10 +1,7 @@
 import sharp from 'sharp'
 
 export const IMAGE_FORMAT = 'png'
-export const PREVIEW_SCALE = 0.25
-export const WATERMARK_ROTATION = -30
-export const WATERMARK_OPACITY = 0.3
-export const WATERMARK_FONT_SIZE = 48
+export const PREVIEW_SCALE = 0.5
 
 export async function downloadImage(url: string): Promise<Buffer> {
   const response = await fetch(url)
@@ -39,46 +36,22 @@ export async function createPreviewImage(
 
 export async function addWatermark(
   imageBuffer: Buffer,
-  text: string,
+  scale: number = PREVIEW_SCALE,
 ): Promise<Buffer> {
   const image = sharp(imageBuffer)
   const metadata = await image.metadata()
-  const width = metadata.width || 957
-  const height = metadata.height || 1278
 
-  const svgText = `
-    <svg width="${width}" height="${height}">
-      <style>
-        .watermark {
-          font-size: ${WATERMARK_FONT_SIZE}px;
-          font-family: Arial, sans-serif;
-          fill: rgba(255, 255, 255, ${WATERMARK_OPACITY});
-        }
-      </style>
-      <text
-        x="50%"
-        y="50%"
-        class="watermark"
-        text-anchor="middle"
-        dominant-baseline="middle"
-        transform="rotate(${WATERMARK_ROTATION}, ${width / 2}, ${height / 2})"
-      >
-        ${text}
-      </text>
-    </svg>
-  `
+  const originalWidth = metadata.width || 957
+  const originalHeight = metadata.height || 1278
 
-  const svgBuffer = Buffer.from(svgText)
+  const targetWidth = Math.round(originalWidth * scale)
+  const targetHeight = Math.round(originalHeight * scale)
 
   return sharp(imageBuffer)
-    .composite([
-      {
-        input: svgBuffer,
-        top: 0,
-        left: 0,
-        blend: 'over',
-      },
-    ])
+    .resize(targetWidth, targetHeight, {
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
     .toFormat(IMAGE_FORMAT)
     .png({ quality: 85 })
     .toBuffer()

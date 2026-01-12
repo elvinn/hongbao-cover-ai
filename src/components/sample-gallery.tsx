@@ -1,26 +1,12 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { getSampleCovers } from '@/api/mock-cover'
+import { SAMPLE_COVERS } from '@/types/hongbao'
+import { COVER_IMAGE_WIDTH, COVER_IMAGE_HEIGHT } from '@/utils/prompts'
 import { RedEnvelopeCover } from '@/components/red-envelope-cover'
-import type { SampleCover as SampleCoverType } from '@/types/hongbao'
-
-function Skeleton() {
-  return (
-    <div className="bg-muted/50 aspect-[1/1.65] w-full animate-pulse rounded-xl" />
-  )
-}
 
 export function SampleGallery() {
-  const [samples, setSamples] = useState<SampleCoverType[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    getSampleCovers().then((data) => {
-      setSamples(data)
-      setIsLoading(false)
-    })
-  }, [])
+  const samples = SAMPLE_COVERS.map((cover) => ({
+    ...cover,
+    imageUrl: `https://picsum.photos/seed/${cover.id}/${COVER_IMAGE_WIDTH}/${COVER_IMAGE_HEIGHT}`,
+  }))
 
   return (
     <div className="space-y-4">
@@ -30,16 +16,14 @@ export function SampleGallery() {
       </div>
 
       <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 sm:gap-6">
-        {isLoading
-          ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} />)
-          : samples.map((sample) => (
-              <div key={sample.id} className="w-full">
-                <RedEnvelopeCover
-                  imageUrl={sample.imageUrl}
-                  className="w-full shadow-sm"
-                />
-              </div>
-            ))}
+        {samples.map((sample) => (
+          <div key={sample.id} className="w-full">
+            <RedEnvelopeCover
+              imageUrl={sample.imageUrl}
+              className="w-full shadow-sm"
+            />
+          </div>
+        ))}
       </div>
     </div>
   )

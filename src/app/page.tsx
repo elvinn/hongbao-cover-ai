@@ -9,7 +9,6 @@ import { GenerationForm } from '@/components/generation-form'
 import { useSession } from '@/hooks/use-session'
 import { useImageGeneration } from '@/hooks/use-image-generation'
 import { downloadCoverByUrl } from '@/utils/download'
-import { getCachedPrompt, clearCachedPrompt } from '@/utils/prompt-cache'
 
 export default function Home() {
   const { isSignedIn, isLoaded: isAuthLoaded } = useAuth()
@@ -37,24 +36,7 @@ export default function Home() {
 
   const [generationError, setGenerationError] = useState<string | null>(null)
   const coverPreviewRef = useRef<HTMLDivElement>(null)
-  const descriptionRef = useRef<HTMLTextAreaElement>(null)
   const processedTaskIdRef = useRef<string | null>(null)
-  const promptRestoredRef = useRef(false)
-
-  // 登录后恢复缓存的提示词
-  useEffect(() => {
-    if (isAuthLoaded && isSignedIn && !promptRestoredRef.current) {
-      const cachedPrompt = getCachedPrompt()
-      if (cachedPrompt && descriptionRef.current) {
-        descriptionRef.current.value = cachedPrompt
-        clearCachedPrompt()
-        // 触发 input 事件以更新状态
-        const event = new Event('input', { bubbles: true })
-        descriptionRef.current.dispatchEvent(event)
-        promptRestoredRef.current = true
-      }
-    }
-  }, [isSignedIn, isAuthLoaded])
 
   const scrollToCoverPreview = useCallback(() => {
     coverPreviewRef.current?.scrollIntoView({
@@ -140,7 +122,6 @@ export default function Home() {
               canGenerateMore={canGenerateMore}
               isGenerating={isGenerating}
               isSessionLoading={isSessionLoading}
-              descriptionRef={descriptionRef}
             />
 
             {displayError && (

@@ -33,10 +33,7 @@ export const ALIBABA_API_CONFIG = {
 /**
  * 默认系统 prompt（当环境变量未设置时使用）
  */
-export const DEFAULT_SYSTEM_PROMPT = `你是一个专业的微信红包封面设计师。
-
-设计规范：
-- 尺寸：${COVER_IMAGE_WIDTH}×${COVER_IMAGE_HEIGHT} 像素（竖版）`
+export const DEFAULT_SYSTEM_PROMPT = `你是一个专业的微信红包封面设计师。`
 
 /**
  * 获取系统 prompt
@@ -59,7 +56,6 @@ export function buildFullPrompt(userInput: string): string {
   const systemPrompt = getSystemPrompt()
 
   return `${systemPrompt}
-
-用户要求：
-${trimmedInput}`
+尺寸要求：${COVER_IMAGE_WIDTH}×${COVER_IMAGE_HEIGHT} 像素（竖版）
+用户要求：${trimmedInput}`
 }
