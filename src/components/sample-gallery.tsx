@@ -7,7 +7,7 @@ import type { SampleCover as SampleCoverType } from '@/types/hongbao'
 
 function Skeleton() {
   return (
-    <div className="bg-muted/50 aspect-4/7 w-full animate-pulse rounded-xl" />
+    <div className="bg-muted/50 aspect-[1/1.65] w-full animate-pulse rounded-xl" />
   )
 }
 

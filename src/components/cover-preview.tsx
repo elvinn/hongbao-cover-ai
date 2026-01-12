@@ -42,7 +42,7 @@ export function CoverPreview({
   }
 
   return (
-    <div className="w-full max-w-[400px]">
+    <div className="w-full max-w-[300px]">
       <RedEnvelopeCover imageUrl={imageUrl} className="w-full" />
       {onDownload && (
         <Button className="mt-4 w-full" onClick={onDownload}>

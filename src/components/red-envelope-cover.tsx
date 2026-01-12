@@ -10,7 +10,7 @@ interface RedEnvelopeCoverProps {
   className?: string
 }
 
-const ASPECT_RATIO = 4 / 7
+const ASPECT_RATIO = 1 / 1.65
 
 export function RedEnvelopeCover({
   imageUrl = '',
@@ -27,7 +27,7 @@ export function RedEnvelopeCover({
   return (
     <div
       className={cn(
-        'relative aspect-4/7 overflow-hidden rounded-lg',
+        'relative aspect-[1/1.65] overflow-hidden rounded-lg',
         className,
       )}
       style={style}
@@ -46,7 +46,7 @@ export function RedEnvelopeCover({
           alt="红包封面"
           fill
           className={cn(
-            'object-cover object-top transition-opacity duration-300',
+            'object-contain object-top transition-opacity duration-300',
             isCoverLoaded ? 'opacity-100' : 'opacity-0',
           )}
           unoptimized
