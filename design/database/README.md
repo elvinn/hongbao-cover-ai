@@ -63,14 +63,11 @@ PENDING → PROCESSING → SUCCEEDED
 | id | uuid | ✓ | gen_random_uuid() | 主键 |
 | task_id | uuid | ✓ | - | 外键，关联 generation_tasks |
 | user_id | text | ✓ | - | 外键，关联 users |
-| preview_key | text | ✓ | - | R2 预览图 key |
 | original_key | text | ✓ | - | R2 原图 key |
-| preview_url | text | ✓ | - | CDN 预览图 URL |
 | created_at | timestamptz | ✓ | now() | 创建时间 |
 
-**安全设计**：
-- `preview_key` 和 `original_key` 使用不同的 UUID
-- 用户无法通过预览图 URL 推测原图地址
+**说明**：
+- 水印在图片生成时由 API 直接添加（免费用户）
 - 原图只能通过 API 验证后获取
 
 ### 4. payments - 支付记录

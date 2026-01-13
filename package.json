@@ -1,18 +1,11 @@
 {
-  "name": "supa-next-starter",
-  "description": "A production ready Next.js/Supabase starter. ",
+  "name": "hongbao-ai",
+  "description": "红包封面 AI",
   "version": "1.0.0",
   "private": true,
-  "author": "Michael Troya <hi@michaeltroya.ca> (@michaeltroya)",
+  "author": "Elvinn",
   "license": "MIT",
-  "keywords": [
-    "nextjs",
-    "starter",
-    "supabase",
-    "tailwindcss",
-    "shadcn",
-    "typescript"
-  ],
+  "keywords": ["红包封面", "微信红包封面", "红包封面生成", "AI生成红包封面", "红包封面设计", "微信红包", "2026红包封面", "新年红包封面", "春节红包封面", "免费红包封面", "在线红包封面生成器", "红包封面生成", "AI红包封面", "红包封面图片", "自定义红包封面"],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -50,11 +43,13 @@
     "next": "^16.1.1",
     "next-themes": "^0.4.6",
     "nextjs-toploader": "^3.9.17",
+    "openai": "^6.16.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "sharp": "^0.34.5",
     "stripe": "^20.1.2",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
@@ -62,6 +57,7 @@
     "@types/node": "25.0.3",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    "@types/uuid": "^11.0.0",
     "eslint": "9.39.2",
     "eslint-config-next": "16.1.1",
     "husky": "^9.1.7",

@@ -36,7 +36,7 @@ const faqs = [
   {
     question: '支持哪些支付方式？',
     answer:
-      '目前支持通过 Stripe 支付，可使用信用卡或借记卡（Visa、MasterCard、银联等）。',
+      '目前支持微信支付、支付宝，以及信用卡/借记卡（Visa、MasterCard、银联等）。',
   },
   {
     question: '生成的封面版权归谁所有？',

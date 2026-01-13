@@ -26,7 +26,7 @@ export const PRICING_PLANS: Record<PlanId, PricingPlan> = {
     credits: 3,
     validityDays: 7,
     validityDisplay: '7 天',
-    features: ['3 次生成机会', '高清无水印下载', '7 天有效期'],
+    features: ['3 次生成机会', '无水印', '高清下载', '7 天有效期'],
   },
   premium: {
     id: 'premium',
@@ -37,7 +37,7 @@ export const PRICING_PLANS: Record<PlanId, PricingPlan> = {
     credits: 20,
     validityDays: 90,
     validityDisplay: '3 个月',
-    features: ['20 次生成机会', '高清无水印下载', '3 个月有效期'],
+    features: ['20 次生成机会', '无水印', '高清下载', '3 个月有效期'],
     recommended: true,
   },
 } as const

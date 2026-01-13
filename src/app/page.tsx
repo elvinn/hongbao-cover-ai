@@ -2,21 +2,18 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@clerk/nextjs'
 import { CoverPreview } from '@/components/cover-preview'
 import { SampleGallery } from '@/components/sample-gallery'
 import { GenerationForm } from '@/components/generation-form'
+import { CreditsExhaustedModal } from '@/components/credits-exhausted-modal'
 import { useSession } from '@/hooks/use-session'
 import { useImageGeneration } from '@/hooks/use-image-generation'
 import { downloadCoverByUrl } from '@/utils/download'
 
 export default function Home() {
-  const { isSignedIn, isLoaded: isAuthLoaded } = useAuth()
   const {
     credits,
     accessLevel,
-    generationCount,
-    creditsExpiresAt,
     isLoading: isSessionLoading,
     isAuthenticated,
     incrementGeneration,
@@ -35,6 +32,7 @@ export default function Home() {
   } = useImageGeneration()
 
   const [generationError, setGenerationError] = useState<string | null>(null)
+  const [showCreditsModal, setShowCreditsModal] = useState(false)
   const coverPreviewRef = useRef<HTMLDivElement>(null)
   const processedTaskIdRef = useRef<string | null>(null)
 
@@ -99,6 +97,10 @@ export default function Home() {
     }
   }, [imageUrl])
 
+  const handleCreditsExhausted = useCallback(() => {
+    setShowCreditsModal(true)
+  }, [])
+
   return (
     <main className="flex min-h-screen flex-col items-center">
       <div className="container max-w-5xl px-4 py-10 sm:py-14">
@@ -117,11 +119,12 @@ export default function Home() {
           <div className="hb-card p-6 sm:p-8">
             <GenerationForm
               onGenerate={handleGenerate}
-              generationCount={generationCount}
               credits={credits}
               canGenerateMore={canGenerateMore}
               isGenerating={isGenerating}
               isSessionLoading={isSessionLoading}
+              isPremium={isPremium}
+              onCreditsExhausted={handleCreditsExhausted}
             />
 
             {displayError && (
@@ -203,6 +206,11 @@ export default function Home() {
           <SampleGallery />
         </div>
       </div>
+
+      <CreditsExhaustedModal
+        open={showCreditsModal}
+        onOpenChange={setShowCreditsModal}
+      />
     </main>
   )
 }

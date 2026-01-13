@@ -61,7 +61,7 @@ export default function PricingPage() {
             选择适合你的套餐
           </h1>
           <p className="hb-section-subtitle text-base sm:text-lg">
-            解锁高清无水印封面，畅享 AI 生成体验
+            解锁无水印高清封面，畅享 AI 生成体验
           </p>
         </header>
 
@@ -91,7 +91,7 @@ export default function PricingPage() {
 
         <div className="mt-10 text-center">
           <p className="text-muted-foreground text-sm">
-            支付由 Stripe 安全处理，支持信用卡/借记卡
+            支付由 Stripe 安全处理，支持微信支付、支付宝、信用卡/借记卡
           </p>
           <p className="text-muted-foreground mt-1 text-xs">
             购买后 credits 立即到账，有效期内可随时使用

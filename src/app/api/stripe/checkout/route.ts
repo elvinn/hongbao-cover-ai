@@ -69,9 +69,12 @@ export async function POST(request: NextRequest) {
     // 创建 Checkout Session
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      // TODO: 待审核通过后启用微信支付和支付宝
-      // payment_method_types: ['wechat_pay', 'alipay', 'card'],
-      payment_method_types: ['card'],
+      payment_method_types: ['wechat_pay', 'alipay', 'card'],
+      payment_method_options: {
+        wechat_pay: {
+          client: 'web',
+        },
+      },
       line_items: [
         {
           price_data: {

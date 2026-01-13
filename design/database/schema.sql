@@ -57,23 +57,19 @@ CREATE INDEX IF NOT EXISTS idx_generation_tasks_provider_task_id ON public.gener
 CREATE INDEX IF NOT EXISTS idx_generation_tasks_status ON public.generation_tasks(status);
 
 -- -----------------------------------------------------------------------------
--- 3. Images 表 - 图片存储映射（核心安全设计）
+-- 3. Images 表 - 图片存储映射
 -- -----------------------------------------------------------------------------
--- preview_key 和 original_key 使用不同的 UUID，防止通过 preview URL 推测 original
 CREATE TABLE IF NOT EXISTS public.images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   task_id UUID NOT NULL REFERENCES public.generation_tasks(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  preview_key TEXT NOT NULL,                     -- R2 存储 key: preview/{previewUUID}.png
-  original_key TEXT NOT NULL,                    -- R2 存储 key: original/{originalUUID}.png
-  preview_url TEXT NOT NULL,                     -- CDN 公开 URL
+  original_key TEXT NOT NULL,                    -- R2 存储 key: original/{uuid}.png
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_images_task_id ON public.images(task_id);
 CREATE INDEX IF NOT EXISTS idx_images_user_id ON public.images(user_id);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_images_preview_key ON public.images(preview_key);
 
 -- -----------------------------------------------------------------------------
 -- 4. Payments 表 - 支付记录

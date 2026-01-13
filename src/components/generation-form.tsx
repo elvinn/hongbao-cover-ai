@@ -15,7 +15,6 @@ import {
 interface GenerationFormProps {
   onGenerate: (description: string) => void
   disabled?: boolean
-  generationCount: number
   credits: number
   canGenerateMore: boolean
   isGenerating?: boolean
@@ -23,12 +22,13 @@ interface GenerationFormProps {
   initialPrompt?: string
   initialStyle?: CoverStyle
   descriptionRef?: React.RefObject<HTMLTextAreaElement | null>
+  isPremium?: boolean
+  onCreditsExhausted?: () => void
 }
 
 export function GenerationForm({
   onGenerate,
   disabled = false,
-  generationCount,
   credits,
   canGenerateMore,
   isGenerating = false,
@@ -36,6 +36,8 @@ export function GenerationForm({
   initialPrompt = '',
   initialStyle = 'newyear',
   descriptionRef,
+  isPremium = false,
+  onCreditsExhausted,
 }: GenerationFormProps) {
   const { isSignedIn, isLoaded: isAuthLoaded } = useAuth()
   const { redirectToSignIn } = useClerk()
@@ -84,16 +86,6 @@ export function GenerationForm({
     [selectedStyle, saveInput, isSignedIn],
   )
 
-  const handleStyleChange = useCallback(
-    (style: CoverStyle) => {
-      setSelectedStyle(style)
-      if (isSignedIn) {
-        saveInput(description, style)
-      }
-    },
-    [description, saveInput, isSignedIn],
-  )
-
   const handleGenerate = useCallback(() => {
     setError(null)
     const trimmedDescription = description.trim()
@@ -120,11 +112,22 @@ export function GenerationForm({
 
     // 检查是否还有生成次数
     if (!canGenerateMore) {
+      if (isPremium && onCreditsExhausted) {
+        onCreditsExhausted()
+      }
       return
     }
 
     onGenerate(trimmedDescription)
-  }, [description, isSignedIn, canGenerateMore, onGenerate, redirectToSignIn])
+  }, [
+    description,
+    isSignedIn,
+    canGenerateMore,
+    isPremium,
+    onCreditsExhausted,
+    onGenerate,
+    redirectToSignIn,
+  ])
 
   const isBtnLoading = isGenerating
   // 未登录时也可以点击按钮（会跳转登录）
@@ -158,9 +161,6 @@ export function GenerationForm({
             ) : (
               '描述清晰有助于生成更好的封面'
             )}
-          </span>
-          <span className={charCount > 2000 ? 'text-destructive' : ''}>
-            {charCount}/2000
           </span>
         </div>
       </div>

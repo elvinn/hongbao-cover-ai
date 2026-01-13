@@ -1,10 +1,13 @@
-export function getAlibabaImageKey(): string {
-  const key = process.env.NEXT_PUBLIC_ALIBABA_IMAGE_KEY
-  if (!key || key === 'your-alibaba-image-key') {
+/**
+ * Get the Volcano Engine (Ark) API key for Seeddream
+ */
+export function getArkApiKey(): string {
+  const key = process.env.ARK_API_KEY
+  if (!key || key === 'your-ark-api-key') {
     throw new Error(
-      'NEXT_PUBLIC_ALIBABA_IMAGE_KEY is not configured. ' +
-        'Please add your Alibaba Wanx API key to .env.local. ' +
-        'Get your API key from: https://dashscope.console.aliyun.com/',
+      'ARK_API_KEY is not configured. ' +
+        'Please add your Volcano Engine Ark API key to .env.local. ' +
+        'Get your API key from: https://console.volcengine.com/ark',
     )
   }
   return key
@@ -36,11 +39,14 @@ export function validateEnv(): { valid: boolean; errors: string[] } {
     errors.push('NEXT_PUBLIC_SUPABASE_ANON_KEY is not configured')
   }
 
+  // Validate Seeddream API key
   if (
-    !process.env.NEXT_PUBLIC_ALIBABA_IMAGE_KEY ||
-    process.env.NEXT_PUBLIC_ALIBABA_IMAGE_KEY === 'your-alibaba-image-key'
+    !process.env.ARK_API_KEY ||
+    process.env.ARK_API_KEY === 'your-ark-api-key'
   ) {
-    errors.push('NEXT_PUBLIC_ALIBABA_IMAGE_KEY is not configured')
+    errors.push(
+      'ARK_API_KEY is not configured (required for Seeddream provider)',
+    )
   }
 
   return {

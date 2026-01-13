@@ -1,44 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import {
-  queryTaskStatus,
-  mapApiStatusToTaskStatus,
-  getImageUrlFromResponse,
-} from '@/services/alibaba-image'
-import {
-  downloadImage,
-  createPreviewImage,
-  addWatermark,
-  generateImageId,
-} from '@/utils/image-processor'
-import {
-  uploadToR2,
-  getPreviewUrl,
-  getSignedDownloadUrl,
-} from '@/utils/r2-storage'
-import { createServiceRoleClient } from '@/supabase/server'
-import type { TaskStatus } from '@/types/hongbao'
+import { getImageProvider } from '@/services/image-generation'
 import {
   pollRateLimit,
   getClientIP,
   buildRateLimitResponse,
 } from '@/utils/rate-limit'
 
-const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || 'cdn.hongbao.elvinn.wiki'
-const ORIGINAL_FOLDER = 'original'
-const PREVIEW_FOLDER = 'preview'
-
-interface TaskResult {
-  taskId: string
-  status: TaskStatus
-  output?: {
-    url?: string
-    imageId?: string
-    error_code?: string
-    error_message?: string
-  }
-}
-
+/**
+ * 查询异步任务状态
+ * 注意：当前使用的 Seeddream provider 是同步的，不支持任务轮询
+ * 保留此 API 以便将来可能添加异步 provider
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ taskId: string }> },
@@ -75,165 +48,31 @@ export async function GET(
       )
     }
 
-    // 查询文生图任务状态
-    const response = await queryTaskStatus(taskId)
-    const status = mapApiStatusToTaskStatus(response.output.task_status)
-    const imageUrl = getImageUrlFromResponse(response)
+    // 获取 provider
+    const provider = getImageProvider()
 
-    const result: TaskResult = {
-      taskId: response.output.task_id,
-      status,
-    }
-
-    // 获取 Supabase 客户端（使用 service role）
-    const supabase = createServiceRoleClient()
-
-    // 更新数据库中的任务状态
-    if (status === 'FAILED') {
-      result.output = {
-        error_code: response.output.code || 'GenerationFailed',
-        error_message: response.output.message || '图片生成失败，请稍后重试',
-      }
-
-      // 更新任务状态为失败
-      await supabase
-        .from('generation_tasks')
-        .update({
-          status: 'FAILED',
-          error_code: response.output.code || 'GenerationFailed',
-          error_message: response.output.message || '图片生成失败',
-          completed_at: new Date().toISOString(),
-        })
-        .eq('provider_task_id', taskId)
-        .eq('user_id', userId)
-    }
-
-    if (status === 'SUCCEEDED' && imageUrl) {
-      // 使用两个不同的 UUID 存储 preview 和 original
-      const previewId = generateImageId()
-      const originalId = generateImageId()
-
-      try {
-        // 先查询用户会员状态
-        const { data: userData } = await supabase
-          .from('users')
-          .select('access_level')
-          .eq('id', userId)
-          .single()
-
-        const isPremium = userData?.access_level === 'premium'
-
-        // 下载原图
-        const originalBuffer = await downloadImage(imageUrl)
-
-        // 构建存储 key
-        const originalKey = `${ORIGINAL_FOLDER}/${originalId}.png`
-        const previewKey = `${PREVIEW_FOLDER}/${previewId}.png`
-
-        let finalUrl: string
-        let previewKeyToStore: string | null = null
-        let previewUrlToStore: string | null = null
-
-        if (isPremium) {
-          // 付费会员：只上传原图，不生成预览图
-          await uploadToR2(originalBuffer, originalKey)
-          finalUrl = await getSignedDownloadUrl(originalKey)
-        } else {
-          // 免费用户：生成预览图并上传两个版本
-          const previewBuffer = await createPreviewImage(originalBuffer)
-          const watermarkedBuffer = await addWatermark(previewBuffer)
-
-          // 并行上传到 R2
-          await Promise.all([
-            uploadToR2(originalBuffer, originalKey),
-            uploadToR2(watermarkedBuffer, previewKey),
-          ])
-
-          previewKeyToStore = previewKey
-          previewUrlToStore = getPreviewUrl(previewKey, CDN_DOMAIN)
-          finalUrl = previewUrlToStore
-        }
-
-        // 查询任务记录
-        const { data: taskData } = await supabase
-          .from('generation_tasks')
-          .select('id')
-          .eq('provider_task_id', taskId)
-          .eq('user_id', userId)
-          .single()
-
-        // 在数据库中创建图片记录
-        const { data: imageData, error: insertError } = await supabase
-          .from('images')
-          .insert({
-            task_id: taskData?.id,
-            user_id: userId,
-            preview_key: previewKeyToStore,
-            original_key: originalKey,
-            preview_url: previewUrlToStore,
-          })
-          .select('id')
-          .single()
-
-        if (insertError) {
-          console.error('Failed to insert image record:', insertError)
-        }
-
-        // 更新任务状态为成功
-        await supabase
-          .from('generation_tasks')
-          .update({
-            status: 'SUCCEEDED',
-            completed_at: new Date().toISOString(),
-          })
-          .eq('provider_task_id', taskId)
-          .eq('user_id', userId)
-
-        // 返回图片记录 ID 和 URL
-        result.output = {
-          url: finalUrl,
-          imageId: imageData?.id || previewId,
-        }
-      } catch (processError) {
-        console.error('Image processing error:', processError)
-
-        // 处理失败时，标记任务为失败
-        await supabase
-          .from('generation_tasks')
-          .update({
-            status: 'FAILED',
-            error_code: 'ProcessingFailed',
-            error_message: '图片处理失败',
-            completed_at: new Date().toISOString(),
-          })
-          .eq('provider_task_id', taskId)
-          .eq('user_id', userId)
-
-        result.output = {
-          error_code: 'ProcessingFailed',
-          error_message: '图片处理失败，请重试',
-        }
-        result.status = 'FAILED'
-      }
-    } else if (status === 'PROCESSING' || status === 'PENDING') {
-      // 更新任务状态
-      await supabase
-        .from('generation_tasks')
-        .update({ status })
-        .eq('provider_task_id', taskId)
-        .eq('user_id', userId)
-    }
-
-    return NextResponse.json(result)
-  } catch (error) {
-    console.error('Query task error:', error)
-
-    if (error instanceof Error && error.message.includes('not found')) {
+    // Seeddream provider 是同步的，不支持任务轮询
+    // 图片生成结果在 POST /api/generate 时直接返回
+    if (provider.isSync) {
       return NextResponse.json(
-        { error: 'TASK_NOT_FOUND', message: '任务不存在' },
-        { status: 404 },
+        {
+          error: 'NOT_SUPPORTED',
+          message: '当前 provider 不支持任务轮询，图片已在生成时直接返回',
+        },
+        { status: 400 },
       )
     }
+
+    // 如果将来添加异步 provider，可以在这里实现轮询逻辑
+    return NextResponse.json(
+      {
+        error: 'NOT_IMPLEMENTED',
+        message: '异步任务查询暂未实现',
+      },
+      { status: 501 },
+    )
+  } catch (error) {
+    console.error('Query task error:', error)
 
     return NextResponse.json(
       { error: 'SERVER_ERROR', message: '查询任务状态失败，请稍后重试' },

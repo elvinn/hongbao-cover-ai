@@ -48,9 +48,7 @@ export interface DbImage {
   id: string
   task_id: string
   user_id: string
-  preview_key: string
   original_key: string
-  preview_url: string
   created_at: string
 }
 

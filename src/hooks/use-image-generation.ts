@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TaskStatus } from '@/types/hongbao'
 
@@ -6,6 +6,7 @@ interface GenerationState {
   taskId: string | null
   status: TaskStatus | null
   imageUrl: string | null
+  imageId: string | null
   error: string | null
   prompt: string
 }
@@ -42,12 +43,33 @@ function clearStorage(): void {
   localStorage.removeItem(STORAGE_KEY)
 }
 
+interface GenerateResponse {
+  taskId: string
+  status: TaskStatus
+  imageUrl?: string
+  imageId?: string
+  error?: string
+  message?: string
+}
+
+interface TaskStatusResponse {
+  taskId: string
+  status: TaskStatus
+  output?: {
+    url?: string
+    imageId?: string
+    error_code?: string
+    error_message?: string
+  }
+}
+
 export function useImageGeneration() {
   const queryClient = useQueryClient()
   const [state, setState] = useState<GenerationState>(() => ({
     taskId: null,
     status: null,
     imageUrl: null,
+    imageId: null,
     error: null,
     prompt: '',
     ...loadFromStorage(),
@@ -66,18 +88,39 @@ export function useImageGeneration() {
         throw new Error(error.message || '生成失败')
       }
 
-      return response.json() as Promise<{ taskId: string; status: TaskStatus }>
+      return response.json() as Promise<GenerateResponse>
     },
     onSuccess: (data, variables) => {
+      // Handle sync response (Vercel provider returns SUCCEEDED with imageUrl)
+      if (data.status === 'SUCCEEDED' && data.imageUrl) {
+        const newState: GenerationState = {
+          taskId: data.taskId,
+          status: data.status,
+          imageUrl: data.imageUrl,
+          imageId: data.imageId || null,
+          error: null,
+          prompt: variables,
+        }
+        setState(newState)
+        clearStorage() // No need to save for sync response
+        return
+      }
+
+      // Handle async response (Alibaba provider returns PROCESSING)
       const newState: GenerationState = {
         taskId: data.taskId,
         status: data.status,
         imageUrl: null,
-        error: null,
+        imageId: null,
+        error: data.status === 'FAILED' ? data.message || '生成失败' : null,
         prompt: variables,
       }
       setState(newState)
-      saveToStorage(newState)
+
+      // Only save to storage for async tasks that need polling
+      if (data.status === 'PROCESSING' || data.status === 'PENDING') {
+        saveToStorage(newState)
+      }
     },
     onError: (error: Error) => {
       setState((prev) => ({
@@ -86,6 +129,11 @@ export function useImageGeneration() {
       }))
     },
   })
+
+  // Only enable polling for async providers (status is PENDING or PROCESSING)
+  const shouldPoll =
+    !!state.taskId &&
+    (state.status === 'PENDING' || state.status === 'PROCESSING')
 
   const { data: taskStatus, isFetching: isPolling } = useQuery({
     queryKey: ['generationStatus', state.taskId],
@@ -98,15 +146,9 @@ export function useImageGeneration() {
         throw new Error(error.message || '查询失败')
       }
 
-      return response.json() as Promise<{
-        taskId: string
-        status: TaskStatus
-        output?: { url?: string; error_code?: string; error_message?: string }
-      }>
+      return response.json() as Promise<TaskStatusResponse>
     },
-    enabled:
-      !!state.taskId &&
-      (state.status === 'PENDING' || state.status === 'PROCESSING'),
+    enabled: shouldPoll,
     refetchInterval: (query) => {
       const status = query.state.data?.status
       if (status === 'PENDING' || status === 'PROCESSING') {
@@ -121,10 +163,12 @@ export function useImageGeneration() {
 
     const newStatus = taskStatus.status
     let imageUrl: string | null = null
+    let imageId: string | null = null
     let error: string | null = null
 
     if (newStatus === 'SUCCEEDED' && taskStatus.output?.url) {
       imageUrl = taskStatus.output.url
+      imageId = taskStatus.output.imageId || null
       clearStorage()
     } else if (newStatus === 'FAILED') {
       error = taskStatus.output?.error_message || '图片生成失败'
@@ -138,6 +182,7 @@ export function useImageGeneration() {
           ...prev,
           status: newStatus,
           imageUrl,
+          imageId,
           error,
         }
         if (newStatus !== 'PENDING' && newStatus !== 'PROCESSING') {
@@ -154,6 +199,7 @@ export function useImageGeneration() {
       taskId: null,
       status: null,
       imageUrl: null,
+      imageId: null,
       error: null,
       prompt: '',
     })
