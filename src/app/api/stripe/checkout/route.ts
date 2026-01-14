@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { getStripe } from '@/services/stripe'
 import { getPlan, PRICING_PLANS } from '@/config/pricing'
+import { createServiceRoleClient } from '@/supabase/server'
 import type { PlanId } from '@/types/database'
 import {
   checkoutRateLimit,
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
     // 创建 Checkout Session
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      payment_method_types: ['wechat_pay', 'alipay', 'card'],
+      payment_method_types: ['alipay', 'wechat_pay', 'card'],
       payment_method_options: {
         wechat_pay: {
           client: 'web',
@@ -98,6 +99,24 @@ export async function POST(request: NextRequest) {
       cancel_url: `${origin}/pricing?canceled=true`,
       customer_email: userEmail,
     })
+
+    // 创建 pending 状态的 payments 记录
+    const supabase = createServiceRoleClient()
+    const { error: paymentError } = await supabase.from('payments').insert({
+      user_id: userId,
+      amount: plan.price,
+      status: 'pending',
+      provider: 'stripe',
+      stripe_session_id: session.id,
+      plan_id: planId,
+      credits_added: plan.credits,
+      credits_validity_days: plan.validityDays,
+    })
+
+    if (paymentError) {
+      console.error('Failed to create pending payment record:', paymentError)
+      // 不阻塞支付流程，继续返回 session URL
+    }
 
     return NextResponse.json({
       url: session.url,

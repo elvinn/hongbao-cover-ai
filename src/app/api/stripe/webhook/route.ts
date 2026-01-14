@@ -131,23 +131,40 @@ async function handleCheckoutCompleted(
     return
   }
 
-  // 创建支付记录
-  const { error: paymentError } = await supabase.from('payments').insert({
-    user_id: userId,
-    amount: session.amount_total || plan.price,
-    status: 'completed',
-    provider: 'stripe',
-    provider_transaction_id: session.payment_intent as string,
-    stripe_session_id: session.id,
-    plan_id: planId,
-    credits_added: credits,
-    credits_validity_days: validityDays,
-    completed_at: new Date().toISOString(),
-  })
+  // 更新 pending 状态的支付记录为 completed
+  const { error: paymentError, count } = await supabase
+    .from('payments')
+    .update({
+      status: 'completed',
+      provider_transaction_id: session.payment_intent as string,
+      completed_at: new Date().toISOString(),
+    })
+    .eq('stripe_session_id', session.id)
+    .eq('status', 'pending')
 
   if (paymentError) {
-    console.error('Failed to create payment record:', paymentError)
-    return
+    console.error('Failed to update payment record:', paymentError)
+  }
+
+  // 如果没有找到 pending 记录（可能是老订单或创建 pending 记录失败），则创建新记录
+  if (count === 0) {
+    const { error: insertError } = await supabase.from('payments').insert({
+      user_id: userId,
+      amount: session.amount_total || plan.price,
+      status: 'completed',
+      provider: 'stripe',
+      provider_transaction_id: session.payment_intent as string,
+      stripe_session_id: session.id,
+      plan_id: planId,
+      credits_added: credits,
+      credits_validity_days: validityDays,
+      completed_at: new Date().toISOString(),
+    })
+
+    if (insertError) {
+      console.error('Failed to create payment record:', insertError)
+      return
+    }
   }
 
   console.log(
