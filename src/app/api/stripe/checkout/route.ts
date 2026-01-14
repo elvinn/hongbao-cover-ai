@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: 'cny',
             product_data: {
-              name: `红包封面生成器 - ${plan.name}`,
+              name: `红包封面 AI - ${plan.name}`,
               description: `${plan.credits} 次生成机会，${plan.validityDisplay}有效`,
             },
             unit_amount: plan.price,

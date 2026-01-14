@@ -63,7 +63,7 @@ export default function FAQPage() {
             常见问题
           </h1>
           <p className="hb-section-subtitle text-base sm:text-lg">
-            关于红包封面生成器的常见问题解答
+            关于红包封面 AI 的常见问题解答
           </p>
         </header>
 
