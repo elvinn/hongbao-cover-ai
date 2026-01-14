@@ -1,7 +1,7 @@
 'use client'
 
 import { useContext } from 'react'
-import { SessionContext, useSessionContext } from '@/providers/SessionProvider'
+import { SessionContext, useSessionContext } from '@/providers/session-provider'
 
 /**
  * Hook: 获取用户会话信息和操作方法
