@@ -13,7 +13,7 @@ import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 
 const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
+  ? 'https://hongbao.elvinn.wiki'
   : 'http://localhost:3000'
 
 export const metadata: Metadata = {
