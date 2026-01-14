@@ -50,7 +50,6 @@ export interface DbImage {
   user_id: string
   preview_key: string | null
   original_key: string
-  preview_url: string | null
   created_at: string
 }
 

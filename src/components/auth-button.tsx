@@ -7,6 +7,7 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs'
+import { ImageIcon } from 'lucide-react'
 import { Button } from './ui/button'
 
 export function AuthButton() {
@@ -33,7 +34,15 @@ export function AuthButton() {
               avatarBox: 'w-8 h-8',
             },
           }}
-        />
+        >
+          <UserButton.MenuItems>
+            <UserButton.Link
+              label="我的封面"
+              labelIcon={<ImageIcon className="h-4 w-4" />}
+              href="/my-gallery"
+            />
+          </UserButton.MenuItems>
+        </UserButton>
       </SignedIn>
     </>
   )

@@ -13,10 +13,8 @@ import {
   generateImageId,
   addWatermark,
 } from '@/utils/image-processor'
-import { uploadToR2, getPreviewUrl } from '@/utils/r2-storage'
+import { uploadToR2, getOriginalKey, getPreviewKey } from '@/utils/r2-storage'
 
-const ORIGINAL_FOLDER = 'original'
-const PREVIEW_FOLDER = 'preview'
 const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || ''
 
 /**
@@ -161,8 +159,8 @@ export async function POST(request: NextRequest) {
       // 生成图片 ID 和存储 key
       const originalId = generateImageId()
       const previewId = generateImageId() // 使用不同的 UUID 以防止推测
-      const originalKey = `${ORIGINAL_FOLDER}/${originalId}.png`
-      const previewKey = `${PREVIEW_FOLDER}/${previewId}.png`
+      const originalKey = getOriginalKey(originalId)
+      const previewKey = getPreviewKey(previewId)
 
       // 查询任务记录
       const { data: taskData } = await supabase
@@ -174,7 +172,6 @@ export async function POST(request: NextRequest) {
 
       let finalImageUrl: string
       let previewKeyToStore: string | null = null
-      let previewUrlToStore: string | null = null
 
       if (isPremium) {
         // 付费用户: 直接返回原始 URL，后台异步下载并上传到 R2
@@ -226,7 +223,6 @@ export async function POST(request: NextRequest) {
 
         // 4. 异步上传原图和预览图到 R2（不阻塞响应）
         previewKeyToStore = previewKey
-        previewUrlToStore = getPreviewUrl(previewKey, CDN_DOMAIN)
 
         // 后台异步上传
         ;(async () => {
@@ -250,7 +246,6 @@ export async function POST(request: NextRequest) {
           user_id: userId,
           preview_key: previewKeyToStore,
           original_key: originalKey,
-          preview_url: previewUrlToStore,
         })
         .select('id')
         .single()

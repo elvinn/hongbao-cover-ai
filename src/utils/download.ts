@@ -43,7 +43,7 @@ export function downloadCoverByUrl(url: string, filename?: string): void {
 
   const link = document.createElement('a')
   link.href = url
-  link.download = filename || `hongbao-cover-${Date.now()}.png`
+  link.download = filename || `红包封面-${Date.now()}.png`
   link.target = '_blank'
   link.rel = 'noopener noreferrer'
 

@@ -23,31 +23,32 @@
 
 ### 1. users - 用户信息
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| id | text | ✓ | - | 主键，Clerk user ID |
-| credits | integer | ✓ | 1 | 剩余生成次数 |
-| credits_expires_at | timestamptz | - | null | Credits 过期时间 |
-| access_level | text | ✓ | 'free' | 访问级别：free/premium |
-| generation_count | integer | ✓ | 0 | 累计生成次数 |
-| created_at | timestamptz | ✓ | now() | 创建时间 |
-| updated_at | timestamptz | ✓ | now() | 更新时间（自动） |
+| 字段               | 类型        | 必填 | 默认值 | 说明                   |
+| ------------------ | ----------- | ---- | ------ | ---------------------- |
+| id                 | text        | ✓    | -      | 主键，Clerk user ID    |
+| credits            | integer     | ✓    | 1      | 剩余生成次数           |
+| credits_expires_at | timestamptz | -    | null   | Credits 过期时间       |
+| access_level       | text        | ✓    | 'free' | 访问级别：free/premium |
+| generation_count   | integer     | ✓    | 0      | 累计生成次数           |
+| created_at         | timestamptz | ✓    | now()  | 创建时间               |
+| updated_at         | timestamptz | ✓    | now()  | 更新时间（自动）       |
 
 ### 2. generation_tasks - 生成任务
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| id | uuid | ✓ | gen_random_uuid() | 主键 |
-| user_id | text | ✓ | - | 外键，关联 users |
-| provider_task_id | text | ✓ | - | 外部服务提供商的任务 ID |
-| prompt | text | ✓ | - | 用户输入的描述 |
-| status | text | ✓ | 'PENDING' | 状态：PENDING/PROCESSING/SUCCEEDED/FAILED |
-| error_code | text | - | null | 错误码 |
-| error_message | text | - | null | 错误信息 |
-| created_at | timestamptz | ✓ | now() | 创建时间 |
-| completed_at | timestamptz | - | null | 完成时间 |
+| 字段             | 类型        | 必填 | 默认值            | 说明                                      |
+| ---------------- | ----------- | ---- | ----------------- | ----------------------------------------- |
+| id               | uuid        | ✓    | gen_random_uuid() | 主键                                      |
+| user_id          | text        | ✓    | -                 | 外键，关联 users                          |
+| provider_task_id | text        | ✓    | -                 | 外部服务提供商的任务 ID                   |
+| prompt           | text        | ✓    | -                 | 用户输入的描述                            |
+| status           | text        | ✓    | 'PENDING'         | 状态：PENDING/PROCESSING/SUCCEEDED/FAILED |
+| error_code       | text        | -    | null              | 错误码                                    |
+| error_message    | text        | -    | null              | 错误信息                                  |
+| created_at       | timestamptz | ✓    | now()             | 创建时间                                  |
+| completed_at     | timestamptz | -    | null              | 完成时间                                  |
 
 **状态流转**：
+
 ```
 PENDING → PROCESSING → SUCCEEDED
     │          │
@@ -58,22 +59,24 @@ PENDING → PROCESSING → SUCCEEDED
 
 ### 3. images - 图片元数据
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| id | uuid | ✓ | gen_random_uuid() | 主键 |
-| task_id | uuid | ✓ | - | 外键，关联 generation_tasks |
-| user_id | text | ✓ | - | 外键，关联 users |
-| preview_key | text | - | null | R2 预览图 key (仅免费用户) |
-| original_key | text | ✓ | - | R2 原图 key |
-| preview_url | text | - | null | CDN 预览图 URL (仅免费用户) |
-| created_at | timestamptz | ✓ | now() | 创建时间 |
+| 字段         | 类型        | 必填 | 默认值            | 说明                        |
+| ------------ | ----------- | ---- | ----------------- | --------------------------- |
+| id           | uuid        | ✓    | gen_random_uuid() | 主键                        |
+| task_id      | uuid        | ✓    | -                 | 外键，关联 generation_tasks |
+| user_id      | text        | ✓    | -                 | 外键，关联 users            |
+| preview_key  | text        | -    | null              | R2 预览图 key (仅免费用户)  |
+| original_key | text        | ✓    | -                 | R2 原图 key                 |
+| preview_url  | text        | -    | null              | CDN 预览图 URL (仅免费用户) |
+| created_at   | timestamptz | ✓    | now()             | 创建时间                    |
 
 **安全设计**：
+
 - `preview_key` 和 `original_key` 使用不同的 UUID
 - 用户无法通过预览图 URL 推测原图地址
 - 原图只能通过 API 验证后获取
 
 **水印处理流程**：
+
 1. 调用 API 时统一设置 `watermark: false`，不依赖 API 水印
 2. **免费用户**：
    - Server 下载无水印原图并保存到 `original/{uuid}.png`
@@ -87,17 +90,17 @@ PENDING → PROCESSING → SUCCEEDED
 
 ### 4. payments - 支付记录
 
-| 字段 | 类型 | 必填 | 默认值 | 说明 |
-|------|------|------|--------|------|
-| id | uuid | ✓ | gen_random_uuid() | 主键 |
-| user_id | text | ✓ | - | 外键，关联 users |
-| amount | integer | ✓ | - | 金额（分） |
-| status | text | ✓ | 'pending' | 状态：pending/completed/failed |
-| provider | text | - | null | 支付渠道：wechat/alipay/mock |
-| provider_transaction_id | text | - | null | 支付平台交易 ID |
-| credits_added | integer | ✓ | 1 | 增加的生成次数 |
-| created_at | timestamptz | ✓ | now() | 创建时间 |
-| completed_at | timestamptz | - | null | 完成时间 |
+| 字段                    | 类型        | 必填 | 默认值            | 说明                           |
+| ----------------------- | ----------- | ---- | ----------------- | ------------------------------ |
+| id                      | uuid        | ✓    | gen_random_uuid() | 主键                           |
+| user_id                 | text        | ✓    | -                 | 外键，关联 users               |
+| amount                  | integer     | ✓    | -                 | 金额（分）                     |
+| status                  | text        | ✓    | 'pending'         | 状态：pending/completed/failed |
+| provider                | text        | -    | null              | 支付渠道：wechat/alipay/mock   |
+| provider_transaction_id | text        | -    | null              | 支付平台交易 ID                |
+| credits_added           | integer     | ✓    | 1                 | 增加的生成次数                 |
+| created_at              | timestamptz | ✓    | now()             | 创建时间                       |
+| completed_at            | timestamptz | -    | null              | 完成时间                       |
 
 ## Row Level Security (RLS)
 

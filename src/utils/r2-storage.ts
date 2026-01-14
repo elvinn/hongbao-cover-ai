@@ -51,7 +51,12 @@ export async function getSignedDownloadUrl(
   return getSignedUrl(s3Client, command, { expiresIn })
 }
 
-export function getPreviewUrl(key: string, cdnDomain: string): string {
+/**
+ * 根据存储 key 生成 CDN URL
+ * @param key - R2 存储 key，如 original/xxx.png 或 preview/xxx.png
+ * @param cdnDomain - CDN 域名，如 cdn.hongbao.elvinn.wiki
+ */
+export function getCdnUrl(key: string, cdnDomain: string): string {
   return `https://${cdnDomain}/${key}`
 }
 

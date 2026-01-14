@@ -63,8 +63,9 @@ CREATE INDEX IF NOT EXISTS idx_generation_tasks_status ON public.generation_task
 -- - 调用 API 时统一不添加水印
 -- - 免费用户: 同时存储无水印原图(original)和带水印预览图(preview)
 --   - original_key: 无水印原图,仅付费后可访问
---   - preview_key/preview_url: 带水印预览图,公开访问
+--   - preview_key: 带水印预览图,公开访问
 -- - 付费用户: 可直接访问 original_key 对应的无水印原图
+-- - CDN URL 通过 R2_CDN_DOMAIN 环境变量 + key 拼接得到
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -72,7 +73,6 @@ CREATE TABLE IF NOT EXISTS public.images (
   user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   preview_key TEXT,                              -- R2 存储 key: preview/{uuid}.png (免费用户)
   original_key TEXT NOT NULL,                    -- R2 存储 key: original/{uuid}.png
-  preview_url TEXT,                              -- CDN 预览图 URL (免费用户)
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 

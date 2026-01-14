@@ -188,5 +188,3 @@ fix: resolve memory leak in useQuery hook
 docs: update API documentation
 ```
 
-## Recent Changes
-- 001-alibaba-image-api: Added [if applicable, e.g., PostgreSQL, CoreData, files or N/A]
