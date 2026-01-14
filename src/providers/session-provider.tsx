@@ -49,8 +49,6 @@ interface SessionContextType {
 
   // 操作方法
   refreshUserData: () => Promise<void>
-  consumeCredit: () => Promise<boolean>
-  incrementGeneration: () => Promise<void>
   markAsPaid: (creditsToAdd?: number) => Promise<void>
   saveInput: (description: string, style: CoverStyle) => void
 }
@@ -163,60 +161,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await loadUserData()
   }, [isSignedIn, loadUserData])
 
-  // 消耗一次生成机会（通过 API 安全更新）
-  const consumeCredit = useCallback(async () => {
-    if (!isSignedIn || !userData || userData.credits <= 0) {
-      return false
-    }
-
-    try {
-      const response = await fetch('/api/user/credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'consume' }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        console.error('Failed to consume credit:', error)
-        return false
-      }
-
-      const data = await response.json()
-      setUserData((prev) => (prev ? { ...prev, credits: data.credits } : prev))
-      return true
-    } catch (error) {
-      console.error('Failed to consume credit:', error)
-      return false
-    }
-  }, [isSignedIn, userData])
-
-  // 增加生成计数（通过 API 安全更新）
-  const incrementGeneration = useCallback(async () => {
-    if (!isSignedIn || !userData) return
-
-    try {
-      const response = await fetch('/api/user/credits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'increment_generation' }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        console.error('Failed to increment generation count:', error)
-        return
-      }
-
-      const data = await response.json()
-      setUserData((prev) =>
-        prev ? { ...prev, generation_count: data.generationCount } : prev,
-      )
-    } catch (error) {
-      console.error('Failed to increment generation count:', error)
-    }
-  }, [isSignedIn, userData])
-
   // 标记为已支付（刷新用户数据以获取最新状态）
   const markAsPaid = useCallback(
     async (creditsToAdd: number = 1) => {
@@ -289,8 +233,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         error,
         savedInput,
         refreshUserData,
-        consumeCredit,
-        incrementGeneration,
         markAsPaid,
         saveInput,
       }}

@@ -18,8 +18,6 @@ import { SessionContext, useSessionContext } from '@/providers/session-provider'
  * - error: 错误信息
  * - savedInput: 本地保存的输入
  * - refreshUserData: 刷新用户数据
- * - consumeCredit: 消耗一次生成机会
- * - incrementGeneration: 增加生成计数
  * - markAsPaid: 标记为已支付
  * - saveInput: 保存用户输入
  */

@@ -8,45 +8,36 @@ import {
   getClientIP,
   buildRateLimitResponse,
 } from '@/utils/rate-limit'
-import { downloadImage, generateImageId } from '@/utils/image-processor'
-import { uploadToR2 } from '@/utils/r2-storage'
+import {
+  downloadImage,
+  generateImageId,
+  addWatermark,
+} from '@/utils/image-processor'
+import { uploadToR2, getPreviewUrl } from '@/utils/r2-storage'
 
 const ORIGINAL_FOLDER = 'original'
+const PREVIEW_FOLDER = 'preview'
+const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || ''
 
 /**
- * 后台异步下载图片并上传到 R2
+ * 后台异步上传图片到 R2
  * 此函数在响应返回后继续执行，不阻塞用户
- * 数据库记录已经创建，只需下载并上传文件到 R2
+ * 数据库记录已经创建，只需上传文件到 R2
  */
 async function uploadImageToR2InBackground(params: {
-  originalUrl: string
+  imageBuffer: Buffer
   originalKey: string
   taskId: string
   userId: string
 }) {
-  const { originalUrl, originalKey, taskId, userId } = params
+  const { imageBuffer, originalKey, taskId, userId } = params
 
   try {
     const startTime = Date.now()
-    console.log('[Background] 开始后台下载和上传:', originalKey)
+    console.log('[Background] 开始后台上传:', originalKey)
 
-    // 1. 下载图片
-    const downloadStartTime = Date.now()
-    const imageBuffer = await downloadImage(originalUrl)
-    console.log(
-      '[Background] 下载图片耗时:',
-      Date.now() - downloadStartTime,
-      'ms',
-    )
-
-    // 2. 上传到 R2
-    const uploadStartTime = Date.now()
+    // 上传到 R2
     await uploadToR2(imageBuffer, originalKey)
-    console.log(
-      '[Background] 上传到 R2 耗时:',
-      Date.now() - uploadStartTime,
-      'ms',
-    )
 
     console.log(
       '[Background] 后台处理完成，总耗时:',
@@ -57,7 +48,6 @@ async function uploadImageToR2InBackground(params: {
   } catch (error) {
     console.error('[Background] 后台处理失败:', error)
     // 注意：这里的错误不会影响已返回给用户的响应
-    // 用户已经得到了临时 URL，可以正常使用
   }
 }
 
@@ -88,19 +78,7 @@ export async function POST(request: NextRequest) {
     // 2. 确保用户存在于数据库中
     const userData = await ensureUserExists(userId)
 
-    // 3. 检查用户是否有足够的 credits
-    if (userData.credits <= 0) {
-      return NextResponse.json(
-        {
-          error: 'NO_CREDITS',
-          message: '生成次数已用完，请购买解锁更多次数',
-          credits: userData.credits,
-        },
-        { status: 403 },
-      )
-    }
-
-    // 4. 解析请求
+    // 3. 解析请求
     const body = await request.json()
     const { prompt } = body
 
@@ -111,16 +89,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 5. 获取图片生成 provider 并生成图片
-    // 付费用户关闭水印，免费用户开启水印（API 自带水印）
+    // 4. 创建 Supabase 客户端
+    const supabase = createServiceRoleClient()
+
+    // 5. 预扣积分（原子操作，确保并发安全）
+    const { data: updateData, error: deductError } = await supabase
+      .from('users')
+      .update({ credits: userData.credits - 1 })
+      .eq('id', userId)
+      .gt('credits', 0) // 确保积分大于0
+      .select('credits')
+      .single()
+
+    if (deductError || !updateData) {
+      return NextResponse.json(
+        {
+          error: 'NO_CREDITS',
+          message: '生成次数不足',
+          credits: userData.credits,
+        },
+        { status: 403 },
+      )
+    }
+
+    console.log(
+      `[Credits] User ${userId}: ${userData.credits} -> ${updateData.credits}`,
+    )
+
+    // 6. 获取图片生成 provider 并生成图片
     const provider = getImageProvider()
     const isPremium = userData.access_level === 'premium'
-    const result = await provider.generateImage(prompt, {
-      watermark: !isPremium, // 免费用户开启水印，付费用户关闭
-    })
+    const result = await provider.generateImage(prompt)
 
-    // 6. 在数据库中创建任务记录
-    const supabase = createServiceRoleClient()
+    // 7. 在数据库中创建任务记录
     const { error: insertError } = await supabase
       .from('generation_tasks')
       .insert({
@@ -135,15 +136,27 @@ export async function POST(request: NextRequest) {
       // 不影响用户体验，继续返回结果
     }
 
-    // 7. 如果生成成功，立即返回原始 URL，后台处理上传
+    // 8. 如果生成成功，根据用户类型处理图片和水印
     if (result.status === 'SUCCEEDED' && result.originalUrl) {
       const processStartTime = Date.now()
-      console.log('[Generate] 立即返回原始 URL，后台处理上传')
+      console.log('[Generate] 图片生成成功，开始处理')
       console.log('[Generate] 用户类型:', isPremium ? 'premium' : 'free')
+
+      // 异步增加生成次数
+      void supabase
+        .from('users')
+        .update({ generation_count: userData.generation_count + 1 })
+        .eq('id', userId)
+
+      console.log(
+        `[Credits] Generation count incremented for user ${userId}: ${userData.generation_count} -> ${userData.generation_count + 1}`,
+      )
 
       // 生成图片 ID 和存储 key
       const originalId = generateImageId()
+      const previewId = generateImageId() // 使用不同的 UUID 以防止推测
       const originalKey = `${ORIGINAL_FOLDER}/${originalId}.png`
+      const previewKey = `${PREVIEW_FOLDER}/${previewId}.png`
 
       // 查询任务记录
       const { data: taskData } = await supabase
@@ -153,13 +166,80 @@ export async function POST(request: NextRequest) {
         .eq('user_id', userId)
         .single()
 
-      // 创建图片记录（提前设置 original_key，后台完成实际上传）
+      let finalImageUrl: string
+      let previewKeyToStore: string | null = null
+      let previewUrlToStore: string | null = null
+
+      if (isPremium) {
+        // 付费用户: 直接返回原始 URL，后台异步下载并上传到 R2
+        console.log('[Generate] 付费用户: 直接返回原始 URL')
+        finalImageUrl = result.originalUrl
+        const originalUrl = result.originalUrl // Capture for async closure
+
+        // 后台异步处理：下载并上传到 R2
+        // 不 await，让它在后台执行
+        ;(async () => {
+          try {
+            const imageBuffer = await downloadImage(originalUrl)
+            await uploadImageToR2InBackground({
+              imageBuffer,
+              originalKey,
+              taskId: result.taskId,
+              userId,
+            })
+          } catch (error) {
+            console.error('[Background Upload] 后台上传失败:', error)
+          }
+        })()
+      } else {
+        // 免费用户: 同步下载、保存原图、生成并保存预览图
+        console.log('[Generate] 免费用户: 同步处理原图和预览图')
+        const downloadStartTime = Date.now()
+
+        // 1. 下载无水印原图
+        const originalBuffer = await downloadImage(result.originalUrl)
+        console.log(
+          '[Generate] 下载图片耗时:',
+          Date.now() - downloadStartTime,
+          'ms',
+        )
+
+        // 2. 添加水印生成预览图
+        const watermarkStartTime = Date.now()
+        const watermarkedBuffer = await addWatermark(originalBuffer)
+        console.log(
+          '[Generate] 添加水印耗时:',
+          Date.now() - watermarkStartTime,
+          'ms',
+        )
+
+        // 3. 并行上传原图和预览图到 R2
+        const uploadStartTime = Date.now()
+        void uploadToR2(originalBuffer, originalKey) // 无水印原图（异步）
+        await uploadToR2(watermarkedBuffer, previewKey) // 带水印预览图（同步）
+
+        console.log(
+          '[Generate] 上传到 R2 耗时:',
+          Date.now() - uploadStartTime,
+          'ms',
+        )
+
+        // 4. 返回预览图的 CDN URL
+        previewKeyToStore = previewKey
+        previewUrlToStore = getPreviewUrl(previewKey, CDN_DOMAIN)
+        finalImageUrl = previewUrlToStore
+        console.log('[Generate] 已生成预览图 CDN URL')
+      }
+
+      // 创建图片记录
       const { data: imageData, error: imageInsertError } = await supabase
         .from('images')
         .insert({
           task_id: taskData?.id,
           user_id: userId,
+          preview_key: previewKeyToStore,
           original_key: originalKey,
+          preview_url: previewUrlToStore,
         })
         .select('id')
         .single()
@@ -169,17 +249,6 @@ export async function POST(request: NextRequest) {
       }
 
       const imageId = imageData?.id || originalId
-
-      // 后台异步处理：下载并上传到 R2
-      // 不 await，让它在后台执行
-      uploadImageToR2InBackground({
-        originalUrl: result.originalUrl,
-        originalKey,
-        taskId: result.taskId,
-        userId,
-      }).catch((error) => {
-        console.error('[Background Upload] 后台上传失败:', error)
-      })
 
       // 更新任务状态为成功
       await supabase
@@ -191,25 +260,33 @@ export async function POST(request: NextRequest) {
         .eq('provider_task_id', result.taskId)
         .eq('user_id', userId)
 
-      console.log(
-        '[Generate] 快速响应耗时:',
-        Date.now() - processStartTime,
-        'ms',
-      )
+      console.log('[Generate] 总处理耗时:', Date.now() - processStartTime, 'ms')
 
-      // 立即返回原始 URL
+      // 返回图片 URL
       return NextResponse.json(
         {
           taskId: result.taskId,
           status: 'SUCCEEDED',
-          imageUrl: result.originalUrl,
+          imageUrl: finalImageUrl,
           imageId,
         },
         { status: 201 },
       )
     }
 
-    // 8. 对于异步 provider 或生成失败，返回任务状态
+    // 9. 对于异步 provider 或生成失败，返回任务状态
+    // 如果生成失败，回滚积分
+    if (result.status === 'FAILED') {
+      await supabase
+        .from('users')
+        .update({ credits: updateData.credits + 1 })
+        .eq('id', userId)
+
+      console.log(
+        `[Credits] Rollback credit for user ${userId}: ${updateData.credits} -> ${updateData.credits + 1}`,
+      )
+    }
+
     // 不直接暴露 provider 的错误消息，使用统一的友好提示
     const responseMessage =
       result.status === 'FAILED' ? '图片生成失败，请稍后重试' : undefined

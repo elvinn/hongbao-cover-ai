@@ -16,8 +16,6 @@ export default function Home() {
     accessLevel,
     isLoading: isSessionLoading,
     isAuthenticated,
-    incrementGeneration,
-    consumeCredit,
     refreshUserData,
   } = useSession()
   const {
@@ -53,21 +51,12 @@ export default function Home() {
   )
 
   const handleGenerateSuccess = useCallback(async () => {
-    const success = await consumeCredit()
-    if (!success) {
-      setGenerationError('生成次数已用完，请购买解锁更多次数')
-      return
-    }
-    await incrementGeneration()
+    // Credits are now deducted on the backend during generation
+    // Just refresh user data to update the display
     await refreshUserData()
     setGenerationError(null)
     setTimeout(scrollToCoverPreview, 100)
-  }, [
-    incrementGeneration,
-    consumeCredit,
-    refreshUserData,
-    scrollToCoverPreview,
-  ])
+  }, [refreshUserData, scrollToCoverPreview])
 
   useEffect(() => {
     if (

@@ -44,9 +44,6 @@ export class SeeddreamProvider implements ImageGenerationProvider {
     const taskId = uuidv4()
     const startTime = Date.now()
 
-    // Default watermark to true (for free users), premium users pass false
-    const watermark = options?.watermark ?? true
-
     try {
       const fullPrompt = buildFullPrompt(prompt)
 
@@ -54,7 +51,6 @@ export class SeeddreamProvider implements ImageGenerationProvider {
       console.log('[Seeddream Provider] 完整提示词:', fullPrompt)
       console.log('[Seeddream Provider] 模型名称:', SEEDDREAM_MODEL)
       console.log('[Seeddream Provider] 图片尺寸:', IMAGE_SIZE)
-      console.log('[Seeddream Provider] 水印设置:', watermark)
 
       // Call Volcano Engine API using OpenAI SDK
       // Note: size is a Volcano Engine specific parameter that accepts custom dimensions
@@ -64,7 +60,7 @@ export class SeeddreamProvider implements ImageGenerationProvider {
         // @ts-expect-error - size accepts custom dimensions on Volcano Engine API (957x1278)
         size: IMAGE_SIZE,
         response_format: 'url',
-        watermark,
+        watermark: false,
       })
 
       const duration = Date.now() - startTime

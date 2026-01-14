@@ -24,6 +24,7 @@ export async function GET() {
       .select(
         `
         id,
+        preview_url,
         created_at,
         generation_tasks (
           prompt,
