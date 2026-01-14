@@ -1,6 +1,13 @@
-# https://www.robotstxt.org/robotstxt.html
+# *
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /sign-in/
+Disallow: /sign-up/
+Disallow: /pricing/success
 
-# Sitemap
+# Host
+Host: https://hongbao.elvinn.wiki
+
+# Sitemaps
 Sitemap: https://hongbao.elvinn.wiki/sitemap.xml
