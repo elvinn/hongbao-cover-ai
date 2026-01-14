@@ -38,5 +38,9 @@ export function buildFullPrompt(userInput: string): string {
 
   const systemPrompt = getSystemPrompt()
 
-  return `${systemPrompt}\n用户要求：${trimmedInput}`
+  return [
+    systemPrompt,
+    `尺寸要求：${COVER_IMAGE_WIDTH}×${COVER_IMAGE_HEIGHT} 像素（竖版）`,
+    `用户要求：${trimmedInput}`,
+  ].join('\n')
 }

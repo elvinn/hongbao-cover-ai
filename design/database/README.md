@@ -63,12 +63,27 @@ PENDING → PROCESSING → SUCCEEDED
 | id | uuid | ✓ | gen_random_uuid() | 主键 |
 | task_id | uuid | ✓ | - | 外键，关联 generation_tasks |
 | user_id | text | ✓ | - | 外键，关联 users |
+| preview_key | text | - | null | R2 预览图 key (仅免费用户) |
 | original_key | text | ✓ | - | R2 原图 key |
+| preview_url | text | - | null | CDN 预览图 URL (仅免费用户) |
 | created_at | timestamptz | ✓ | now() | 创建时间 |
 
-**说明**：
-- 水印在图片生成时由 API 直接添加（免费用户）
+**安全设计**：
+- `preview_key` 和 `original_key` 使用不同的 UUID
+- 用户无法通过预览图 URL 推测原图地址
 - 原图只能通过 API 验证后获取
+
+**水印处理流程**：
+1. 调用 API 时统一设置 `watermark: false`，不依赖 API 水印
+2. **免费用户**：
+   - Server 下载无水印原图并保存到 `original/{uuid}.png`
+   - Server 使用 Sharp 添加水印并保存到 `preview/{uuid}.png`
+   - 返回 `preview_url` (CDN 公开链接，带水印)
+   - 用户付费后可通过 API 获取原图签名 URL
+3. **付费用户**：
+   - 直接返回 API 原图 URL
+   - 后台异步保存原图到 `original/{uuid}.png`
+   - 不生成预览图 (`preview_key` 和 `preview_url` 为 null)
 
 ### 4. payments - 支付记录
 
@@ -133,10 +148,17 @@ CLERK_SECRET_KEY=your_clerk_secret_key
 ```
 1. 前端提交 prompt
 2. API 创建 generation_tasks 记录
-3. 调用文生图 API，保存 provider_task_id
-4. 轮询任务状态，更新 status
-5. 成功后创建 images 记录（不同 UUID）
-6. 扣减 credits，增加 generation_count
+3. 调用文生图 API (watermark: false)，保存 provider_task_id
+4. API 返回无水印图片 URL
+5. 免费用户：
+   - 下载并保存无水印原图到 original/
+   - 生成带水印预览图并保存到 preview/
+   - 返回 preview_url (CDN URL)
+   付费用户：
+   - 直接返回 API 原图 URL
+   - 后台异步保存原图到 original/
+6. 创建 images 记录（使用不同 UUID）
+7. 扣减 credits，增加 generation_count
 ```
 
 ### 支付解锁

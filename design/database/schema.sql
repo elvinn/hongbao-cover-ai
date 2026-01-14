@@ -59,17 +59,27 @@ CREATE INDEX IF NOT EXISTS idx_generation_tasks_status ON public.generation_task
 -- -----------------------------------------------------------------------------
 -- 3. Images 表 - 图片存储映射
 -- -----------------------------------------------------------------------------
+-- 水印处理说明:
+-- - 调用 API 时统一不添加水印
+-- - 免费用户: 同时存储无水印原图(original)和带水印预览图(preview)
+--   - original_key: 无水印原图,仅付费后可访问
+--   - preview_key/preview_url: 带水印预览图,公开访问
+-- - 付费用户: 可直接访问 original_key 对应的无水印原图
+-- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.images (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   task_id UUID NOT NULL REFERENCES public.generation_tasks(id) ON DELETE CASCADE,
   user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  preview_key TEXT,                              -- R2 存储 key: preview/{uuid}.png (免费用户)
   original_key TEXT NOT NULL,                    -- R2 存储 key: original/{uuid}.png
+  preview_url TEXT,                              -- CDN 预览图 URL (免费用户)
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_images_task_id ON public.images(task_id);
 CREATE INDEX IF NOT EXISTS idx_images_user_id ON public.images(user_id);
+CREATE INDEX IF NOT EXISTS idx_images_preview_key ON public.images(preview_key) WHERE preview_key IS NOT NULL;
 
 -- -----------------------------------------------------------------------------
 -- 4. Payments 表 - 支付记录

@@ -17,26 +17,34 @@ export async function downloadImage(url: string): Promise<Buffer> {
  * Add watermark text to an image
  * Uses Sharp's composite feature to overlay SVG text watermark
  * @param imageBuffer - The original image buffer
+ * @param scale - Scale factor for the output image (default: 1, use 0.5 for half size)
  * @returns Buffer with watermark added
  */
-export async function addWatermark(imageBuffer: Buffer): Promise<Buffer> {
+export async function addWatermark(
+  imageBuffer: Buffer,
+  scale: number = 1,
+): Promise<Buffer> {
   const image = sharp(imageBuffer)
   const metadata = await image.metadata()
 
-  const width = metadata.width || COVER_IMAGE_WIDTH
-  const height = metadata.height || COVER_IMAGE_HEIGHT
+  const originalWidth = metadata.width || COVER_IMAGE_WIDTH
+  const originalHeight = metadata.height || COVER_IMAGE_HEIGHT
 
-  // Watermark configuration
-  const fontSize = Math.round(width * 0.04) // Font size ~4% of width
+  // Calculate target dimensions
+  const targetWidth = Math.round(originalWidth * scale)
+  const targetHeight = Math.round(originalHeight * scale)
+
+  // Watermark configuration based on target size
+  const fontSize = Math.round(targetWidth * 0.05)
   const text = 'Hongbao AI'
-  const padding = Math.round(width * 0.03) // Padding ~3% of width
+  const padding = Math.round(targetWidth * 0.04)
   const strokeWidth = Math.max(2, Math.round(fontSize / 20)) // Stroke width relative to font size
 
   // Create SVG watermark - positioned at top-right
   const svgWatermark = `
-    <svg width="${width}" height="${height}">
+    <svg width="${targetWidth}" height="${targetHeight}">
       <text
-        x="${width - padding}"
+        x="${targetWidth - padding}"
         y="${padding + fontSize}"
         text-anchor="end"
         font-size="${fontSize}"
@@ -51,7 +59,17 @@ export async function addWatermark(imageBuffer: Buffer): Promise<Buffer> {
     </svg>
   `
 
-  return image
+  let processedImage = image
+
+  // Resize if scale is not 1
+  if (scale !== 1) {
+    processedImage = processedImage.resize(targetWidth, targetHeight, {
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+  }
+
+  return processedImage
     .composite([
       {
         input: Buffer.from(svgWatermark),
@@ -59,7 +77,7 @@ export async function addWatermark(imageBuffer: Buffer): Promise<Buffer> {
         left: 0,
       },
     ])
-    .png({ quality: 95 })
+    .png({ quality: 80 })
     .toBuffer()
 }
 

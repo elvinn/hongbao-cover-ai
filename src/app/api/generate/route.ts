@@ -143,14 +143,20 @@ export async function POST(request: NextRequest) {
       console.log('[Generate] 用户类型:', isPremium ? 'premium' : 'free')
 
       // 异步增加生成次数
-      void supabase
+      supabase
         .from('users')
         .update({ generation_count: userData.generation_count + 1 })
         .eq('id', userId)
-
-      console.log(
-        `[Credits] Generation count incremented for user ${userId}: ${userData.generation_count} -> ${userData.generation_count + 1}`,
-      )
+        .select()
+        .then(({ error }) => {
+          if (error) {
+            console.error('[Generation Count] 更新失败:', error)
+          } else {
+            console.log(
+              `[Generation Count] Updated for user ${userId}: ${userData.generation_count} -> ${userData.generation_count + 1}`,
+            )
+          }
+        })
 
       // 生成图片 ID 和存储 key
       const originalId = generateImageId()
@@ -192,8 +198,8 @@ export async function POST(request: NextRequest) {
           }
         })()
       } else {
-        // 免费用户: 同步下载、保存原图、生成并保存预览图
-        console.log('[Generate] 免费用户: 同步处理原图和预览图')
+        // 免费用户: 同步生成预览图并返回 base64，异步上传原图和预览图到 R2
+        console.log('[Generate] 免费用户: 生成预览图并返回 base64')
         const downloadStartTime = Date.now()
 
         // 1. 下载无水印原图
@@ -204,31 +210,36 @@ export async function POST(request: NextRequest) {
           'ms',
         )
 
-        // 2. 添加水印生成预览图
+        // 2. 生成缩小的带水印预览图（50% 尺寸）
         const watermarkStartTime = Date.now()
-        const watermarkedBuffer = await addWatermark(originalBuffer)
+        const watermarkedBuffer = await addWatermark(originalBuffer, 0.5)
         console.log(
           '[Generate] 添加水印耗时:',
           Date.now() - watermarkStartTime,
           'ms',
         )
 
-        // 3. 并行上传原图和预览图到 R2
-        const uploadStartTime = Date.now()
-        void uploadToR2(originalBuffer, originalKey) // 无水印原图（异步）
-        await uploadToR2(watermarkedBuffer, previewKey) // 带水印预览图（同步）
+        // 3. 转换为 base64 直接返回（快速响应）
+        const base64Image = watermarkedBuffer.toString('base64')
+        finalImageUrl = `data:image/png;base64,${base64Image}`
+        console.log('[Generate] 已生成 base64 预览图')
 
-        console.log(
-          '[Generate] 上传到 R2 耗时:',
-          Date.now() - uploadStartTime,
-          'ms',
-        )
-
-        // 4. 返回预览图的 CDN URL
+        // 4. 异步上传原图和预览图到 R2（不阻塞响应）
         previewKeyToStore = previewKey
         previewUrlToStore = getPreviewUrl(previewKey, CDN_DOMAIN)
-        finalImageUrl = previewUrlToStore
-        console.log('[Generate] 已生成预览图 CDN URL')
+
+        // 后台异步上传
+        ;(async () => {
+          try {
+            await Promise.all([
+              uploadToR2(originalBuffer, originalKey), // 无水印原图
+              uploadToR2(watermarkedBuffer, previewKey), // 带水印预览图
+            ])
+            console.log('[Background] 图片上传到 R2 完成')
+          } catch (error) {
+            console.error('[Background] 上传到 R2 失败:', error)
+          }
+        })()
       }
 
       // 创建图片记录
@@ -277,14 +288,19 @@ export async function POST(request: NextRequest) {
     // 9. 对于异步 provider 或生成失败，返回任务状态
     // 如果生成失败，回滚积分
     if (result.status === 'FAILED') {
-      await supabase
+      const { error: rollbackError } = await supabase
         .from('users')
         .update({ credits: updateData.credits + 1 })
         .eq('id', userId)
+        .select()
 
-      console.log(
-        `[Credits] Rollback credit for user ${userId}: ${updateData.credits} -> ${updateData.credits + 1}`,
-      )
+      if (rollbackError) {
+        console.error('[Credits] 回滚失败:', rollbackError)
+      } else {
+        console.log(
+          `[Credits] Rollback credit for user ${userId}: ${updateData.credits} -> ${updateData.credits + 1}`,
+        )
+      }
     }
 
     // 不直接暴露 provider 的错误消息，使用统一的友好提示
