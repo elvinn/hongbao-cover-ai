@@ -19,28 +19,23 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
   title: {
-    default: '红包封面 AI | 一句话生成微信红包封面',
+    default: '红包封面 AI - 让祝福更有“面” | 一句话生成微信红包封面',
     template: '%s | 红包封面 AI',
   },
   description:
-    '红包封面 AI 是一款在线微信红包封面生成工具，输入一句话描述，AI 自动生成精美的红包封面图片。支持新年、春节、生日、祝福等多种场景，尺寸完美适配微信红包封面规范（957×1278像素）。',
+    '红包封面 AI 助你让祝福更有“面”。输入一句话描述，即可生成 2026 马年专属微信红包封面。支持春节、生日等多场景定制，尺寸符合官方规范，分享更有仪式感。',
   keywords: [
     '红包封面',
     '微信红包封面',
     '红包封面制作',
     'AI生成红包封面',
-    '红包封面设计',
-    '微信红包',
     '2026红包封面',
     '新年红包封面',
-    '春节红包封面',
-    '免费红包封面',
-    '红包封面 AI',
-    '红包封面生成',
-    'AI红包封面',
-    '红包封面图片',
     '自定义红包封面',
-    '在线红包封面生成器',
+    '红包封面生成器',
+    '红包封面 AI',
+    '在线制作红包封面',
+    '免费红包封面',
   ],
   authors: [{ name: '红包封面 AI' }],
   creator: '红包封面 AI',
@@ -61,9 +56,9 @@ export const metadata: Metadata = {
     locale: 'zh_CN',
     url: defaultUrl,
     siteName: '红包封面 AI',
-    title: '红包封面 AI | 一句话生成微信红包封面',
+    title: '红包封面 AI - 让祝福更有“面” | 一句话生成微信红包封面',
     description:
-      '输入一句话描述，AI 自动生成精美的微信红包封面。支持新年、春节、生日祝福等场景，免费体验一次。',
+      '红包封面 AI 助你让祝福更有“面”。输入一句话描述，即可生成 2026 马年专属微信红包封面。支持春节、生日等多场景定制，尺寸符合官方规范，分享更有仪式感。',
     images: [
       {
         url: '/favicon/android-chrome-512x512.png',
@@ -77,9 +72,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@hongbao',
     creator: '@hongbao',
-    title: '红包封面 AI | 一句话生成微信红包封面',
+    title: '红包封面 AI - 让祝福更有“面” | 一句话生成微信红包封面',
     description:
-      '输入一句话描述，AI 自动生成精美的微信红包封面。支持新年、春节、生日祝福等场景，免费体验一次。',
+      '红包封面 AI 助你让祝福更有“面”。输入一句话描述，即可生成 2026 马年专属微信红包封面。支持春节、生日等多场景定制，尺寸符合官方规范，分享更有仪式感。',
     images: ['/favicon/android-chrome-512x512.png'],
   },
   icons: {
@@ -101,7 +96,7 @@ const jsonLd = {
   '@type': 'WebApplication',
   name: '红包封面 AI',
   description:
-    '红包封面 AI 是一款在线微信红包封面生成工具，输入一句话描述，AI 自动生成精美的红包封面图片。',
+    '红包封面 AI 助你让祝福更有“面”。输入一句话描述，即可生成 2026 马年专属微信红包封面。支持春节、生日等多场景定制，尺寸符合官方规范，分享更有仪式感。',
   url: 'https://hongbao.elvinn.wiki',
   applicationCategory: 'DesignApplication',
   operatingSystem: 'Web',
@@ -116,6 +111,37 @@ const jsonLd = {
     '支持多种场景（新年、春节、生日、祝福）',
     '符合微信红包封面尺寸规范',
     '高清无水印下载',
+  ],
+}
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: '生成的封面可以直接在微信使用吗？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '是的。生成的红包封面图片符合微信红包封面官方尺寸规范（957×1278）。下载原图后，在微信红包封面开放平台提交审核即可使用。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '审核一般需要多久？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '微信红包封面官方审核通常需要 1-3 个工作日。建议在春节或节日前提前制作你的红包封面。',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: '水印如何去除？',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: '购买任意套餐后，AI 生成的红包封面会自动去除水印，并提供高清原图下载。',
+      },
+    },
   ],
 }
 
@@ -135,6 +161,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
       </head>
       <body className="antialiased">

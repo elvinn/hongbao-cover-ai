@@ -170,11 +170,11 @@ export default function Home() {
           </div>
 
           <h1 className="text-primary mb-6 text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
-            把祝福，变成封面
+            让祝福更有“面”
           </h1>
-          <p className="text-muted-foreground mx-auto max-w-3xl text-lg sm:text-xl">
-            用一句话，生成你的专属红包封面
-          </p>
+          <h2 className="text-muted-foreground mx-auto max-w-3xl text-lg font-normal sm:text-xl">
+            AI 驱动，一句话生成专属红包封面
+          </h2>
 
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -469,15 +469,15 @@ export default function Home() {
             {[
               {
                 q: '生成的封面可以直接在微信使用吗？',
-                a: '是的。生成的图片完全符合微信 957×1278 的尺寸要求。你下载原图后，只需在微信红包封面开放平台提交审核即可。',
+                a: '是的。生成的红包封面图片符合微信红包封面官方尺寸规范（957×1278）。下载原图后，在微信红包封面开放平台提交审核即可使用。',
               },
               {
                 q: '审核一般需要多久？',
-                a: '微信官方审核通常需要 1-3 个工作日。建议你提前制作，以免错过节日。',
+                a: '微信红包封面官方审核通常需要 1-3 个工作日。建议在春节或节日前提前制作你的红包封面。',
               },
               {
                 q: '水印如何去除？',
-                a: '购买任意高级版套餐后，生成的所有封面都将自动移除水印，并提供最高清的原图下载。',
+                a: '购买任意套餐后，AI 生成的红包封面会自动去除水印，并提供高清原图下载。',
               },
             ].map((faq, idx) => (
               <div

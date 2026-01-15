@@ -26,17 +26,17 @@ function SampleGalleryComponent() {
       <div className="flex items-center justify-between px-1">
         <div className="space-y-0.5">
           <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-            灵感图库
+            热门红包封面作品精选
           </h2>
           <p className="text-muted-foreground text-xs sm:text-sm">
-            参考由 AI 生成的精美封面
+            看看 AI 生成的精美封面
           </p>
         </div>
         <Link
           href="/gallery"
           className="group text-primary inline-flex items-center gap-1 text-xs font-semibold transition-colors hover:opacity-80"
         >
-          查看灵感广场
+          查看作品精选
           <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>

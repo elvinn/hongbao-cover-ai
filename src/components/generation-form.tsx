@@ -174,7 +174,7 @@ export function GenerationForm({
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <h2 className="text-lg font-bold">封面描述</h2>
+        <h2 className="text-lg font-bold">描绘你的灵感画面</h2>
         <textarea
           id="description"
           ref={descriptionRef}

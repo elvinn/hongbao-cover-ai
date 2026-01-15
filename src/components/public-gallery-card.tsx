@@ -32,6 +32,9 @@ export function PublicGalleryCard({
   const router = useRouter()
   const [isExpanded, setIsExpanded] = useState(false)
   const prompt = image.prompt || '微信红包封面'
+  const altText = image.prompt?.trim()
+    ? `红包封面：${image.prompt.trim()}`
+    : undefined
 
   const handlePromptClick = useCallback(() => {
     // 移动端：跳转到详情页
@@ -57,6 +60,7 @@ export function PublicGalleryCard({
       >
         <RedEnvelopeCover
           imageUrl={image.imageUrl}
+          alt={altText}
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
         />
       </Link>

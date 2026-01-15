@@ -7,6 +7,7 @@ import { cn } from '@/utils/tailwind'
 interface RedEnvelopeCoverProps {
   imageUrl?: string
   width?: number
+  alt?: string
   className?: string
 }
 
@@ -15,6 +16,7 @@ const ASPECT_RATIO = 1 / 1.65
 export function RedEnvelopeCover({
   imageUrl = '',
   width,
+  alt,
   className,
 }: RedEnvelopeCoverProps) {
   const [isCoverLoaded, setIsCoverLoaded] = useState(false)
@@ -43,7 +45,7 @@ export function RedEnvelopeCover({
       {imageUrl && (
         <Image
           src={imageUrl}
-          alt="红包封面"
+          alt={alt || '红包封面'}
           fill
           className={cn(
             'object-contain object-top transition-opacity duration-300',

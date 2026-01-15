@@ -131,9 +131,9 @@ export function GalleryContent({
                 </Badge>
               )}
             </div>
-            <p className="text-base text-slate-500">
-              探索由 AI 创作的精美微信红包封面作品
-            </p>
+            <h2 className="text-base font-normal text-slate-500">
+              浏览 AI 生成的微信红包封面，发现热门封面灵感
+            </h2>
           </div>
 
           {/* Sort Toggle */}
