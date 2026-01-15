@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CoverPreview } from '@/components/cover-preview'
 import { SampleGallery } from '@/components/sample-gallery'
 import { GenerationForm } from '@/components/generation-form'
+import { ShareButton } from '@/components/share-button'
 import { CreditsExhaustedModal } from '@/components/credits-exhausted-modal'
 import { useSession } from '@/hooks/use-session'
 import { useImageGeneration } from '@/hooks/use-image-generation'
@@ -21,6 +22,7 @@ export default function Home() {
   const {
     create,
     imageUrl,
+    imageId,
     status,
     error: apiError,
     isGenerating,
@@ -172,6 +174,13 @@ export default function Home() {
                     <p className="text-sm text-emerald-900">
                       您已解锁高清无水印版本，可以直接下载使用
                     </p>
+                  </div>
+                )}
+
+                {/* Share button */}
+                {imageId && (
+                  <div className="w-full pt-2">
+                    <ShareButton imageId={imageId} className="w-full" />
                   </div>
                 )}
               </div>

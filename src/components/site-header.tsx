@@ -15,6 +15,7 @@ import { cn } from '@/utils/tailwind'
 
 const navItems = [
   { href: '/', label: '首页' },
+  { href: '/gallery', label: '广场' },
   { href: '/pricing', label: '价格' },
 ]
 

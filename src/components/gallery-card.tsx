@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Download } from 'lucide-react'
+import Link from 'next/link'
+import { Download, Globe, Lock, Loader2 } from 'lucide-react'
 import { RedEnvelopeCover } from '@/components/red-envelope-cover'
 import { Button } from '@/components/ui/button'
 import { downloadCoverByUrl } from '@/utils/download'
@@ -24,6 +25,8 @@ function formatDate(dateString: string): string {
 
 export function GalleryCard({ image }: GalleryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isPublic, setIsPublic] = useState(image.is_public)
+  const [isUpdating, setIsUpdating] = useState(false)
   const prompt = image.generation_tasks?.prompt || '未知提示词'
 
   const handleDownload = useCallback(() => {
@@ -36,10 +39,49 @@ export function GalleryCard({ image }: GalleryCardProps) {
     setIsExpanded((prev) => !prev)
   }, [])
 
+  const togglePublic = useCallback(async () => {
+    if (isUpdating) return
+
+    setIsUpdating(true)
+    const newValue = !isPublic
+
+    try {
+      const response = await fetch(`/api/user/images/${image.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_public: newValue }),
+      })
+
+      if (response.ok) {
+        setIsPublic(newValue)
+      } else {
+        console.error('Failed to update public status')
+      }
+    } catch (error) {
+      console.error('Failed to update public status:', error)
+    } finally {
+      setIsUpdating(false)
+    }
+  }, [image.id, isPublic, isUpdating])
+
   return (
     <div className="group flex flex-col">
-      {/* Cover Image */}
-      <RedEnvelopeCover imageUrl={image.url || undefined} className="w-full" />
+      {/* Cover Image - click to view detail if public */}
+      {isPublic ? (
+        <Link href={`/cover/${image.id}`} className="block">
+          <RedEnvelopeCover
+            imageUrl={image.url || undefined}
+            className="w-full transition-transform hover:scale-[1.02]"
+          />
+        </Link>
+      ) : (
+        <RedEnvelopeCover
+          imageUrl={image.url || undefined}
+          className="w-full"
+        />
+      )}
 
       {/* Info Section */}
       <div className="mt-3 space-y-2">
@@ -56,6 +98,28 @@ export function GalleryCard({ image }: GalleryCardProps) {
             {prompt}
           </p>
         </div>
+
+        {/* Public Toggle */}
+        <button
+          onClick={togglePublic}
+          disabled={isUpdating}
+          className={cn(
+            'flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs transition-colors',
+            isPublic
+              ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+              : 'bg-gray-50 text-gray-600 hover:bg-gray-100',
+            isUpdating && 'cursor-not-allowed opacity-50',
+          )}
+        >
+          {isUpdating ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : isPublic ? (
+            <Globe className="h-3.5 w-3.5" />
+          ) : (
+            <Lock className="h-3.5 w-3.5" />
+          )}
+          <span>{isPublic ? '已公开到广场' : '仅自己可见'}</span>
+        </button>
 
         {/* Date and Download */}
         <div className="flex items-center justify-between">

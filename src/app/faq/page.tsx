@@ -31,7 +31,7 @@ const faqs = [
   {
     question: '购买套餐后 credits 会过期吗？',
     answer:
-      '是的，购买的 credits 有效期为 30 天，请在有效期内使用。过期后未使用的 credits 将失效。',
+      '是的，购买的 credits 有有效期限制。体验版有效期为 7 天，畅享版有效期为 3 个月（90 天）。请在有效期内使用，过期后未使用的 credits 将失效。',
   },
   {
     question: '支持哪些支付方式？',

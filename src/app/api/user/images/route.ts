@@ -86,6 +86,7 @@ export async function GET(request: NextRequest) {
         id,
         preview_key,
         original_key,
+        is_public,
         created_at,
         generation_tasks (
           prompt,
@@ -120,6 +121,7 @@ export async function GET(request: NextRequest) {
       return {
         id: image.id,
         url,
+        is_public: image.is_public,
         created_at: image.created_at,
         generation_tasks: image.generation_tasks,
       }

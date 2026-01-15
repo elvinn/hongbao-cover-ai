@@ -73,6 +73,8 @@ CREATE TABLE IF NOT EXISTS public.images (
   user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   preview_key TEXT,                              -- R2 存储 key: preview/{uuid}.png (免费用户)
   original_key TEXT NOT NULL,                    -- R2 存储 key: original/{uuid}.png
+  is_public BOOLEAN DEFAULT FALSE NOT NULL,     -- 是否公开展示
+  likes_count INTEGER DEFAULT 0 NOT NULL,       -- 点赞数（冗余字段，提高查询性能）
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
@@ -80,9 +82,30 @@ CREATE TABLE IF NOT EXISTS public.images (
 CREATE INDEX IF NOT EXISTS idx_images_task_id ON public.images(task_id);
 CREATE INDEX IF NOT EXISTS idx_images_user_id ON public.images(user_id);
 CREATE INDEX IF NOT EXISTS idx_images_preview_key ON public.images(preview_key) WHERE preview_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_images_is_public ON public.images(is_public) WHERE is_public = TRUE;
+CREATE INDEX IF NOT EXISTS idx_images_likes_count ON public.images(likes_count DESC);
 
 -- -----------------------------------------------------------------------------
--- 4. Payments 表 - 支付记录
+-- 4. Image Likes 表 - 图片点赞记录
+-- -----------------------------------------------------------------------------
+-- 用于记录用户对图片的点赞，支持后续扩展（如点赞记录页面）
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.image_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  image_id UUID NOT NULL REFERENCES public.images(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  
+  CONSTRAINT unique_image_like UNIQUE (image_id, user_id)
+);
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_image_likes_image_id ON public.image_likes(image_id);
+CREATE INDEX IF NOT EXISTS idx_image_likes_user_id ON public.image_likes(user_id);
+CREATE INDEX IF NOT EXISTS idx_image_likes_created_at ON public.image_likes(created_at DESC);
+
+-- -----------------------------------------------------------------------------
+-- 5. Payments 表 - 支付记录
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.payments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -116,4 +139,5 @@ CREATE INDEX IF NOT EXISTS idx_payments_stripe_session_id ON public.payments(str
 ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.generation_tasks DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.images DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.image_likes DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments DISABLE ROW LEVEL SECURITY;

@@ -1,27 +1,24 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 
-export type GallerySortOrder = 'newest' | 'oldest'
+export type GallerySortOrder = 'newest' | 'popular'
 
-export interface GalleryImage {
+export interface PublicGalleryImage {
   id: string
-  url: string | null
-  is_public: boolean
-  created_at: string
-  generation_tasks: {
-    prompt: string
-    status: string
-  } | null
+  imageUrl: string
+  likesCount: number
+  prompt: string
+  createdAt: string
 }
 
 interface GalleryResponse {
-  images: GalleryImage[]
+  images: PublicGalleryImage[]
   hasMore: boolean
   total: number
   page: number
   pageSize: number
 }
 
-const PAGE_SIZE = 8
+const PAGE_SIZE = 12
 
 async function fetchGalleryImages(
   page: number,
@@ -33,7 +30,7 @@ async function fetchGalleryImages(
     sort,
   })
 
-  const response = await fetch(`/api/user/images?${params}`)
+  const response = await fetch(`/api/gallery?${params}`)
 
   if (!response.ok) {
     const error = await response.json()
@@ -43,9 +40,9 @@ async function fetchGalleryImages(
   return response.json()
 }
 
-export function useMyGallery(sort: GallerySortOrder = 'newest') {
+export function usePublicGallery(sort: GallerySortOrder = 'popular') {
   const query = useInfiniteQuery({
-    queryKey: ['my-gallery', sort],
+    queryKey: ['public-gallery', sort],
     queryFn: ({ pageParam }) => fetchGalleryImages(pageParam, sort),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {

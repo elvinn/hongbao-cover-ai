@@ -50,6 +50,18 @@ export interface DbImage {
   user_id: string
   preview_key: string | null
   original_key: string
+  is_public: boolean
+  likes_count: number
+  created_at: string
+}
+
+/**
+ * image_likes 表
+ */
+export interface DbImageLike {
+  id: string
+  image_id: string
+  user_id: string
   created_at: string
 }
 
@@ -95,11 +107,24 @@ export interface Database {
       }
       images: {
         Row: DbImage
-        Insert: Omit<DbImage, 'id' | 'created_at'> & {
+        Insert: Omit<
+          DbImage,
+          'id' | 'created_at' | 'is_public' | 'likes_count'
+        > & {
+          id?: string
+          created_at?: string
+          is_public?: boolean
+          likes_count?: number
+        }
+        Update: Partial<Omit<DbImage, 'id' | 'created_at'>>
+      }
+      image_likes: {
+        Row: DbImageLike
+        Insert: Omit<DbImageLike, 'id' | 'created_at'> & {
           id?: string
           created_at?: string
         }
-        Update: Partial<Omit<DbImage, 'id' | 'created_at'>>
+        Update: Partial<Omit<DbImageLike, 'id' | 'created_at'>>
       }
       payments: {
         Row: DbPayment
