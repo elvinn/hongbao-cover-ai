@@ -32,8 +32,8 @@ export const PRICING_PLANS: Record<PlanId, PricingPlan> = {
     id: 'premium',
     name: '畅享版',
     description: '超值推荐',
-    price: 2990, // ¥29.9
-    priceDisplay: '¥29.9',
+    price: 1990, // ¥19.9
+    priceDisplay: '¥19.9',
     credits: 20,
     validityDays: 90,
     validityDisplay: '3 个月',
