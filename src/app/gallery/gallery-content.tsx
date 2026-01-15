@@ -35,6 +35,7 @@ export function GalleryContent({
 }: GalleryContentProps) {
   const [sort, setSort] = useState<GallerySortOrder>('popular')
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const isInCooldownRef = useRef(false)
 
   // Only provide initial data for SSR mode (bots/crawlers)
   const hasInitialData = isSSR && initialImages.length > 0
@@ -76,7 +77,12 @@ export function GalleryContent({
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        if (
+          entries[0].isIntersecting &&
+          hasNextPage &&
+          !isFetchingNextPage &&
+          !isInCooldownRef.current
+        ) {
           fetchNextPage()
         }
       },
@@ -94,6 +100,21 @@ export function GalleryContent({
       }
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+  // 加载完成后设置冷却期，防止立即触发下一次加载
+  useEffect(() => {
+    if (isFetchingNextPage) {
+      return
+    }
+
+    // 加载完成，进入冷却期
+    isInCooldownRef.current = true
+    const timer = setTimeout(() => {
+      isInCooldownRef.current = false
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [isFetchingNextPage])
 
   const handleSortChange = useCallback((newSort: string) => {
     setSort(newSort as GallerySortOrder)

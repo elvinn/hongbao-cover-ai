@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { createServiceRoleClient } from '@/supabase/server'
 import { getCdnUrl } from '@/utils/r2-storage'
+import { getOptimizedImageUrl } from '@/utils/cdn'
 import { PUBLIC_GALLERY_PAGE_SIZE } from '@/config/pagination'
 
 const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || ''
@@ -104,11 +105,12 @@ export async function GET(request: NextRequest) {
       likedImageIds = new Set(likes?.map((l) => l.image_id) || [])
     }
 
-    // 处理图片 URL（使用原图 CDN URL）
+    // 处理图片 URL（使用优化后的 CDN URL）
     const processedImages = (images || []).map((image) => {
-      const imageUrl = image.original_key
+      const rawUrl = image.original_key
         ? getCdnUrl(image.original_key, CDN_DOMAIN)
         : getCdnUrl(image.preview_key, CDN_DOMAIN)
+      const imageUrl = getOptimizedImageUrl(rawUrl)
 
       // generation_tasks is an array from the join, get the first element
       const generationTask = Array.isArray(image.generation_tasks)
