@@ -166,7 +166,7 @@ export default function Home() {
         <header className="relative mb-12 text-center sm:mb-20">
           <div className="mx-auto mb-6 flex w-fit items-center gap-2 rounded-full border border-red-200/50 bg-red-50/50 px-4 py-1.5 text-sm font-medium text-red-700 backdrop-blur-sm">
             <Sparkles className="h-4 w-4" />
-            <span>2026 贺岁版正式上线</span>
+            <span>2026 马年·新春贺岁版正式上线</span>
           </div>
 
           <h1 className="text-primary mb-6 text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">

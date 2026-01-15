@@ -1,9 +1,12 @@
+import { getOptimizedImageUrl } from '@/utils/cdn'
+
 export interface CuratedGalleryItem {
   imageId: string
   imageUrl: string
 }
 
-export const CURATED_GALLERY: CuratedGalleryItem[] = [
+// Raw gallery data with original URLs (easier to maintain)
+const CURATED_GALLERY_RAW = [
   {
     imageId: '0474c68c-3ecb-4751-b006-4765ecbc8c0c',
     imageUrl:
@@ -35,3 +38,11 @@ export const CURATED_GALLERY: CuratedGalleryItem[] = [
       'https://cdn.hongbao.elvinn.wiki/original/a95a05db-0855-4d92-b6bd-3c7843ba415c.png',
   },
 ]
+
+// Export optimized gallery with CDN image transformation
+export const CURATED_GALLERY: CuratedGalleryItem[] = CURATED_GALLERY_RAW.map(
+  (item) => ({
+    ...item,
+    imageUrl: getOptimizedImageUrl(item.imageUrl),
+  }),
+)

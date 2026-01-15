@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { useAuth } from '@clerk/nextjs'
 import { ChevronDown, ImageIcon, Loader2, Sparkles } from 'lucide-react'
 import { GalleryCard } from '@/components/gallery-card'
-import { GallerySkeleton } from '@/components/gallery-skeleton'
 import { useMyGallery, type GallerySortOrder } from '@/hooks/use-my-gallery'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -200,7 +199,11 @@ export default function MyGalleryPage() {
         )}
 
         {/* Initial Loading State */}
-        {isLoading && images.length === 0 && <GallerySkeleton />}
+        {isLoading && images.length === 0 && (
+          <div className="flex min-h-[45vh] items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+          </div>
+        )}
       </div>
     </main>
   )
