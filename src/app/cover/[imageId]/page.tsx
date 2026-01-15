@@ -1,7 +1,13 @@
 import { auth } from '@clerk/nextjs/server'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Sparkles, User } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Shuffle,
+  Sparkles,
+  User,
+} from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { RedEnvelopeCover } from '@/components/red-envelope-cover'
 import { LikeButton } from '@/components/like-button'
@@ -201,6 +207,57 @@ export default async function CoverDetailPage({ params }: PageProps) {
             </div>
           </div>
         </div>
+
+        {/* Cover Navigation */}
+        <nav
+          className="mt-12 flex items-center justify-center gap-3"
+          aria-label="封面导航"
+        >
+          {/* Previous Button */}
+          {cover.navigation.prevId ? (
+            <Button asChild variant="outline" size="lg" className="gap-2">
+              <Link href={`/cover/${cover.navigation.prevId}`}>
+                <ChevronLeft className="h-5 w-5" />
+                <span className="hidden sm:inline">上一张</span>
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="lg" className="gap-2" disabled>
+              <ChevronLeft className="h-5 w-5" />
+              <span className="hidden sm:inline">上一张</span>
+            </Button>
+          )}
+
+          {/* Random Button */}
+          {cover.navigation.randomId ? (
+            <Button asChild variant="outline" size="lg" className="gap-2">
+              <Link href={`/cover/${cover.navigation.randomId}`}>
+                <Shuffle className="h-5 w-5" />
+                <span className="hidden sm:inline">随机</span>
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="lg" className="gap-2" disabled>
+              <Shuffle className="h-5 w-5" />
+              <span className="hidden sm:inline">随机</span>
+            </Button>
+          )}
+
+          {/* Next Button */}
+          {cover.navigation.nextId ? (
+            <Button asChild variant="outline" size="lg" className="gap-2">
+              <Link href={`/cover/${cover.navigation.nextId}`}>
+                <span className="hidden sm:inline">下一张</span>
+                <ChevronRight className="h-5 w-5" />
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" size="lg" className="gap-2" disabled>
+              <span className="hidden sm:inline">下一张</span>
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          )}
+        </nav>
       </div>
     </main>
   )

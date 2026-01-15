@@ -139,6 +139,15 @@ export async function fetchPublicGalleryImages(
 }
 
 /**
+ * 封面导航接口
+ */
+export interface CoverNavigation {
+  prevId: string | null // 上一张（更热的）
+  nextId: string | null // 下一张（更冷的）
+  randomId: string | null // 随机一张
+}
+
+/**
  * 封面详情接口
  */
 export interface CoverDetail {
@@ -153,6 +162,7 @@ export interface CoverDetail {
     nickname: string
     avatarUrl: string | null
   }
+  navigation: CoverNavigation
 }
 
 export type FetchCoverDetailResult =
@@ -264,6 +274,66 @@ export async function fetchCoverDetail(
       ? image.generation_tasks[0]
       : image.generation_tasks
 
+    // 并行查询导航数据（上一张、下一张、随机）
+    const currentLikesCount = image.likes_count
+    const currentCreatedAt = image.created_at
+
+    // 获取公开图片总数用于随机选择
+    const { count: totalPublic } = await supabase
+      .from('images')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_public', true)
+      .neq('id', imageId)
+
+    const randomOffset =
+      totalPublic && totalPublic > 0
+        ? Math.floor(Math.random() * totalPublic)
+        : 0
+
+    const [prevResult, nextResult, randomResult] = await Promise.all([
+      // 上一张（更热的）：likes_count 更高，或相同 likes_count 但更新
+      supabase
+        .from('images')
+        .select('id')
+        .eq('is_public', true)
+        .or(
+          `likes_count.gt.${currentLikesCount},and(likes_count.eq.${currentLikesCount},created_at.gt.${currentCreatedAt})`,
+        )
+        .order('likes_count', { ascending: true })
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .single(),
+
+      // 下一张（更冷的）：likes_count 更低，或相同 likes_count 但更旧
+      supabase
+        .from('images')
+        .select('id')
+        .eq('is_public', true)
+        .or(
+          `likes_count.lt.${currentLikesCount},and(likes_count.eq.${currentLikesCount},created_at.lt.${currentCreatedAt})`,
+        )
+        .order('likes_count', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single(),
+
+      // 随机一张（排除当前图片）- 使用随机偏移量
+      supabase
+        .from('images')
+        .select('id')
+        .eq('is_public', true)
+        .neq('id', imageId)
+        .order('created_at', { ascending: false })
+        .range(randomOffset, randomOffset)
+        .single(),
+    ])
+
+    const navigation: CoverNavigation = {
+      prevId: prevResult.data?.id || null,
+      nextId: nextResult.data?.id || null,
+      randomId: randomResult.data?.id || null,
+    }
+
     return {
       success: true,
       data: {
@@ -275,6 +345,7 @@ export async function fetchCoverDetail(
         isOwner,
         createdAt: image.created_at,
         creator,
+        navigation,
       },
     }
   } catch (error) {
