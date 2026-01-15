@@ -84,6 +84,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: defaultUrl,
   },
+  verification: {
+    other: {
+      'baidu-site-verification': 'codeva-Y7Y293KiKp',
+    },
+  },
 }
 
 type RootLayoutProps = {
