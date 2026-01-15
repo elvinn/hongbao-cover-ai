@@ -204,8 +204,12 @@ export function GalleryContent({
       {displayImages.length > 0 && !showGlobalLoading && (
         <>
           <div className="grid grid-cols-2 gap-4 sm:gap-8 md:grid-cols-3">
-            {displayImages.map((image) => (
-              <PublicGalleryCard key={image.id} image={image} />
+            {displayImages.map((image, index) => (
+              <PublicGalleryCard
+                key={image.id}
+                image={image}
+                priority={index < 6}
+              />
             ))}
           </div>
 

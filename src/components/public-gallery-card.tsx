@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { RedEnvelopeCover } from '@/components/red-envelope-cover'
 import { LikeButton } from '@/components/like-button'
+import { ShareButton } from '@/components/share-button'
 import type { PublicGalleryImage } from '@/hooks/use-public-gallery'
 import { cn } from '@/utils/tailwind'
 
@@ -14,6 +15,7 @@ const MOBILE_BREAKPOINT = 640
 interface PublicGalleryCardProps {
   image: PublicGalleryImage
   className?: string
+  priority?: boolean
 }
 
 // Format date as YYYY-MM-DD
@@ -28,6 +30,7 @@ function formatDate(dateString: string): string {
 export function PublicGalleryCard({
   image,
   className,
+  priority = false,
 }: PublicGalleryCardProps) {
   const router = useRouter()
   const [isExpanded, setIsExpanded] = useState(false)
@@ -62,6 +65,7 @@ export function PublicGalleryCard({
           imageUrl={image.imageUrl}
           alt={altText}
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+          priority={priority}
         />
       </Link>
 
@@ -80,14 +84,22 @@ export function PublicGalleryCard({
 
         {/* Footer info */}
         <div className="mt-auto flex items-center justify-between border-t border-slate-50 pt-1">
-          <LikeButton
-            imageId={image.id}
-            initialLikesCount={image.likesCount}
-            initialHasLiked={image.hasLiked}
-            variant="minimal"
-            size="sm"
-            className="text-slate-400 transition-colors group-hover:text-red-500"
-          />
+          <div className="flex items-center gap-2">
+            <LikeButton
+              imageId={image.id}
+              initialLikesCount={image.likesCount}
+              initialHasLiked={image.hasLiked}
+              variant="minimal"
+              size="sm"
+              className="text-slate-400 transition-colors group-hover:text-red-500"
+            />
+            <ShareButton
+              imageId={image.id}
+              variant="minimal"
+              size="sm"
+              className="text-slate-400 transition-colors group-hover:text-red-500"
+            />
+          </div>
           <span className="text-[10px] text-slate-300">
             {formatDate(image.createdAt)}
           </span>

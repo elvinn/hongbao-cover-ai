@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
 import { createServiceRoleClient } from '@/supabase/server'
 import { getCdnUrl } from '@/utils/r2-storage'
+import { getOptimizedImageUrl } from '@/utils/cdn'
 
 const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || ''
 
@@ -105,10 +106,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       // 获取用户信息失败，使用默认值
     }
 
-    // 返回预览图 URL（带水印）
-    const imageUrl = image.preview_key
+    // 返回预览图 URL（带水印，优化后）
+    const rawUrl = image.preview_key
       ? getCdnUrl(image.preview_key, CDN_DOMAIN)
       : getCdnUrl(image.original_key, CDN_DOMAIN)
+    const imageUrl = getOptimizedImageUrl(rawUrl)
 
     // generation_tasks is an array from the join, get the first element
     const generationTask = Array.isArray(image.generation_tasks)

@@ -9,6 +9,7 @@ interface RedEnvelopeCoverProps {
   width?: number
   alt?: string
   className?: string
+  priority?: boolean
 }
 
 const ASPECT_RATIO = 1 / 1.65
@@ -18,6 +19,7 @@ export function RedEnvelopeCover({
   width,
   alt,
   className,
+  priority = false,
 }: RedEnvelopeCoverProps) {
   const [isCoverLoaded, setIsCoverLoaded] = useState(false)
   const [isCoverError, setIsCoverError] = useState(false)
@@ -52,6 +54,7 @@ export function RedEnvelopeCover({
             isCoverLoaded ? 'opacity-100' : 'opacity-0',
           )}
           unoptimized
+          priority={priority}
           onLoad={() => {
             setIsCoverLoaded(true)
           }}
@@ -61,6 +64,7 @@ export function RedEnvelopeCover({
 
       <div className="absolute right-0 bottom-0 left-0 h-[30%]">
         <Image
+          priority
           src="/images/hb_bottom.png"
           alt="红包底部"
           fill

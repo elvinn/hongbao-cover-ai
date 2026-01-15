@@ -6,6 +6,7 @@ import { ThemeProvider } from 'next-themes'
 import NextTopLoader from 'nextjs-toploader'
 import { Analytics } from '@vercel/analytics/react'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { Toaster } from 'sonner'
 import './globals.css'
 import ReactQueryProvider from '@/providers/react-query-provider'
 import { SessionProvider } from '@/providers/session-provider'
@@ -149,6 +150,8 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://cdn.hongbao.elvinn.wiki" />
+        <link rel="dns-prefetch" href="https://cdn.hongbao.elvinn.wiki" />
         <link
           rel="preconnect"
           href="https://chinese-fonts-cdn.deno.dev"
@@ -195,6 +198,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
                     </div>
                   </div>
                   <Analytics />
+                  <Toaster position="top-center" richColors />
                   <ReactQueryDevtools initialIsOpen={false} />
                 </SessionProvider>
               </ReactQueryProvider>
