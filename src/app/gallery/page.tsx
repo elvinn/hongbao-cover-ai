@@ -1,5 +1,6 @@
 import { headers } from 'next/headers'
 import { fetchPublicGalleryImages } from '@/services/gallery'
+import { PUBLIC_GALLERY_SSR_BOT_PAGE_SIZE } from '@/config/pagination'
 import { isBot } from '@/utils/bot-detection'
 import { GalleryContent } from './gallery-content'
 
@@ -11,7 +12,11 @@ export default async function GalleryPage() {
 
   // Only fetch data on server for bots (SEO), regular users use CSR
   const initialData = shouldSSR
-    ? await fetchPublicGalleryImages('popular', 1, 12)
+    ? await fetchPublicGalleryImages(
+        'popular',
+        1,
+        PUBLIC_GALLERY_SSR_BOT_PAGE_SIZE,
+      )
     : null
 
   return (

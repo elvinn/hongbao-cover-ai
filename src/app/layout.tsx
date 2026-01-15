@@ -124,8 +124,13 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <link
+          rel="preconnect"
+          href="https://chinese-fonts-cdn.deno.dev"
+          crossOrigin="anonymous"
+        />
+        <link
           rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-tc-web@latest/style.css"
+          href="https://chinese-fonts-cdn.deno.dev/packages/lxgwwenkai/dist/lxgwwenkai-regular/result.css"
         />
         <script
           type="application/ld+json"

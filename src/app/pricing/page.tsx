@@ -17,19 +17,19 @@ import { cn } from '@/utils/tailwind'
 
 const PRICING_FAQS = [
   {
-    question: '购买后 credits 什么时候到账？',
+    question: '购买后生成次数什么时候到账？',
     answer:
-      '支付成功后，credits 将立即自动充值到您的账户中。您可以在个人中心查看余额。',
+      '支付成功后，生成次数将立即自动充值到您的账户中。您可以在个人中心查看余额。',
   },
   {
-    question: 'Credits 有效期是多久？',
+    question: '生成次数有效期是多久？',
     answer:
       '体验版有效期为 7 天，畅享版有效期为 3 个月（90 天）。建议在有效期内使用。',
   },
   {
     question: '支持退款吗？',
     answer:
-      '由于 AI 生成属于消耗性数字产品，一旦开始消耗 credits，原则上不支持退款。如有异常支付问题请联系客服。',
+      '由于 AI 生成属于消耗性数字产品，一旦开始消耗生成次数，原则上不支持退款。如有异常支付问题请联系客服。',
   },
   {
     question: '生成的封面可以商用吗？',
@@ -135,7 +135,7 @@ export default function PricingPage() {
           <div className="flex items-center gap-2">
             <Sparkles className="text-primary h-5 w-5" />
             <span className="text-muted-foreground text-sm font-medium">
-              实时生成到账
+              生成次数立即到账
             </span>
           </div>
           <div className="flex items-center gap-2">

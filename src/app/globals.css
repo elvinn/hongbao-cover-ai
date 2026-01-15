@@ -91,7 +91,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'LXGW WenKai TC', sans-serif;
+    font-family: 'LXGW WenKai', -apple-system, sans-serif;
   }
 }
 

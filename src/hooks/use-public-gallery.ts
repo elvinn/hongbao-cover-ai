@@ -1,4 +1,5 @@
 import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query'
+import { PUBLIC_GALLERY_PAGE_SIZE } from '@/config/pagination'
 
 export type GallerySortOrder = 'newest' | 'popular'
 
@@ -20,17 +21,17 @@ interface GalleryResponse {
 
 interface UsePublicGalleryOptions {
   initialData?: InfiniteData<GalleryResponse, number>
+  pageSize?: number
 }
-
-const PAGE_SIZE = 12
 
 async function fetchGalleryImages(
   page: number,
   sort: GallerySortOrder,
+  pageSize: number,
 ): Promise<GalleryResponse> {
   const params = new URLSearchParams({
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(pageSize),
     sort,
   })
 
@@ -48,6 +49,8 @@ export function usePublicGallery(
   sort: GallerySortOrder = 'popular',
   options?: UsePublicGalleryOptions,
 ) {
+  const pageSize = options?.pageSize ?? PUBLIC_GALLERY_PAGE_SIZE
+
   // Check if we have actual initial data (not empty)
   // For SSR mode: initialData is provided with images
   // For CSR mode: initialData is undefined, will fetch on mount
@@ -55,8 +58,8 @@ export function usePublicGallery(
     sort === 'popular' && !!options?.initialData?.pages?.[0]?.images?.length
 
   const query = useInfiniteQuery({
-    queryKey: ['public-gallery', sort],
-    queryFn: ({ pageParam }) => fetchGalleryImages(pageParam, sort),
+    queryKey: ['public-gallery', sort, pageSize],
+    queryFn: ({ pageParam }) => fetchGalleryImages(pageParam, sort, pageSize),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.hasMore) {

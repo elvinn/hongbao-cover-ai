@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { createServiceRoleClient } from '@/supabase/server'
 import { getCdnUrl } from '@/utils/r2-storage'
+import { MY_GALLERY_PAGE_SIZE } from '@/config/pagination'
 
 const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || ''
-const DEFAULT_PAGE_SIZE = 12
+const DEFAULT_PAGE_SIZE = MY_GALLERY_PAGE_SIZE
 
 /**
  * GET /api/user/images - 获取用户的图片列表（支持分页和排序）
@@ -12,7 +13,7 @@ const DEFAULT_PAGE_SIZE = 12
  * Query params:
  * - sort: 'newest' | 'oldest' (default: 'newest')
  * - page: number (default: 1)
- * - pageSize: number (default: 12)
+ * - pageSize: number (default: 6)
  *
  * 返回的 url 字段（通过 CDN 提供）：
  * - 付费用户：{R2_CDN_DOMAIN}/{original_key}（无水印原图）

@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { MY_GALLERY_PAGE_SIZE } from '@/config/pagination'
 
 export type GallerySortOrder = 'newest' | 'oldest'
 
@@ -21,15 +22,13 @@ interface GalleryResponse {
   pageSize: number
 }
 
-const PAGE_SIZE = 8
-
 async function fetchGalleryImages(
   page: number,
   sort: GallerySortOrder,
 ): Promise<GalleryResponse> {
   const params = new URLSearchParams({
     page: String(page),
-    pageSize: String(PAGE_SIZE),
+    pageSize: String(MY_GALLERY_PAGE_SIZE),
     sort,
   })
 

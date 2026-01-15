@@ -141,7 +141,7 @@ export default function PaymentSuccessPage() {
             支付成功！
           </h1>
           <p className="text-muted-foreground mb-6">
-            感谢你的购买，credits 已到账
+            感谢你的购买，生成次数已到账
           </p>
 
           <div className="bg-muted/50 mb-6 space-y-4 rounded-lg p-6">

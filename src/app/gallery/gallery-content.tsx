@@ -9,6 +9,10 @@ import {
   type GallerySortOrder,
   type PublicGalleryImage,
 } from '@/hooks/use-public-gallery'
+import {
+  PUBLIC_GALLERY_PAGE_SIZE,
+  PUBLIC_GALLERY_SSR_BOT_PAGE_SIZE,
+} from '@/config/pagination'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -34,6 +38,9 @@ export function GalleryContent({
 
   // Only provide initial data for SSR mode (bots/crawlers)
   const hasInitialData = isSSR && initialImages.length > 0
+  const pageSize = isSSR
+    ? PUBLIC_GALLERY_SSR_BOT_PAGE_SIZE
+    : PUBLIC_GALLERY_PAGE_SIZE
 
   const {
     images,
@@ -43,6 +50,7 @@ export function GalleryContent({
     hasNextPage,
     fetchNextPage,
   } = usePublicGallery(sort, {
+    pageSize,
     initialData: hasInitialData
       ? {
           pages: [
@@ -51,7 +59,7 @@ export function GalleryContent({
               hasMore: initialHasMore,
               total: initialTotal,
               page: 1,
-              pageSize: 12,
+              pageSize,
             },
           ],
           pageParams: [1],
@@ -174,7 +182,7 @@ export function GalleryContent({
       {/* Gallery Grid */}
       {displayImages.length > 0 && !showGlobalLoading && (
         <>
-          <div className="grid grid-cols-2 gap-4 sm:gap-8 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 sm:gap-8 md:grid-cols-3">
             {displayImages.map((image) => (
               <PublicGalleryCard key={image.id} image={image} />
             ))}

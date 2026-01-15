@@ -172,7 +172,7 @@ export default function Home() {
           <h1 className="text-primary mb-6 text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl">
             把祝福，变成封面
           </h1>
-          <p className="text-muted-foreground mx-auto max-w-2xl text-lg sm:text-xl">
+          <p className="text-muted-foreground mx-auto max-w-3xl text-lg sm:text-xl">
             用一句话，生成你的专属红包封面
           </p>
 
@@ -192,7 +192,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="mx-auto max-w-2xl space-y-12 sm:space-y-16">
+        <div className="mx-auto max-w-3xl space-y-12 sm:space-y-16">
           <div className="hb-card relative z-10 p-6 sm:p-8">
             <GenerationForm
               onGenerate={handleGenerate}

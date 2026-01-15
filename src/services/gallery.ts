@@ -1,8 +1,9 @@
 import { createServiceRoleClient } from '@/supabase/server'
 import { getCdnUrl } from '@/utils/r2-storage'
+import { PUBLIC_GALLERY_PAGE_SIZE } from '@/config/pagination'
 
 const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || ''
-const DEFAULT_PAGE_SIZE = 12
+const DEFAULT_PAGE_SIZE = PUBLIC_GALLERY_PAGE_SIZE
 
 export interface GalleryImage {
   id: string

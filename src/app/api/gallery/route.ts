@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/supabase/server'
 import { getCdnUrl } from '@/utils/r2-storage'
+import { PUBLIC_GALLERY_PAGE_SIZE } from '@/config/pagination'
 
 const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || ''
-const DEFAULT_PAGE_SIZE = 12
+const DEFAULT_PAGE_SIZE = PUBLIC_GALLERY_PAGE_SIZE
 
 /**
  * GET /api/gallery - 获取公开画廊图片列表（支持分页和排序）
@@ -11,7 +12,7 @@ const DEFAULT_PAGE_SIZE = 12
  * Query params:
  * - sort: 'newest' | 'popular' (default: 'popular')
  * - page: number (default: 1)
- * - pageSize: number (default: 12, max: 50)
+ * - pageSize: number (default: 6, max: 50)
  *
  * 返回公开的图片列表（带水印预览图）
  */
