@@ -147,6 +147,12 @@ export default function RootLayout({ children }: RootLayoutProps) {
                 <SessionProvider>
                   <div className="relative min-h-screen">
                     <div className="hb-bg" aria-hidden="true" />
+                    {/* Global Background Decoration */}
+                    <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                      <div className="absolute -top-[5%] -right-[10%] h-[40%] w-[40%] rounded-full bg-red-500/5 blur-[120px]" />
+                      <div className="absolute top-[30%] -left-[10%] h-[30%] w-[30%] rounded-full bg-orange-500/5 blur-[100px]" />
+                      <div className="absolute right-[20%] -bottom-[5%] h-[25%] w-[25%] rounded-full bg-red-500/5 blur-[80px]" />
+                    </div>
                     <div className="relative z-10 flex min-h-screen flex-col">
                       <SiteHeader />
                       <div className="flex-1">{children}</div>

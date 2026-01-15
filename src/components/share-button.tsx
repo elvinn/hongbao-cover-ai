@@ -46,14 +46,14 @@ export function ShareButton({ imageId, className }: ShareButtonProps) {
       size="lg"
       onClick={handleShare}
       className={cn(
-        'cursor-pointer gap-2',
-        copied && 'border-green-500 text-green-600',
+        'cursor-pointer gap-2 transition-all active:scale-95',
+        copied && 'border-red-500 text-red-600 shadow-sm shadow-red-500/10',
         className,
       )}
     >
       {copied ? (
         <>
-          <Check className="h-4 w-4" />
+          <Check className="h-4 w-4 text-red-500" />
           已复制分享文案
         </>
       ) : (

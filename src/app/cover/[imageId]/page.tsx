@@ -1,14 +1,16 @@
 'use client'
 
+import { useRouter, useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Loader2, Sparkles, User } from 'lucide-react'
+import { Loader2, Sparkles, User, ChevronLeft } from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { RedEnvelopeCover } from '@/components/red-envelope-cover'
 import { LikeButton } from '@/components/like-button'
 import { ShareButton } from '@/components/share-button'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface Creator {
   nickname: string
@@ -28,11 +30,20 @@ interface CoverDetail {
 
 export default function CoverDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const imageId = params.imageId as string
 
   const [cover, setCover] = useState<CoverDetail | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [canGoBack, setCanGoBack] = useState(false)
+
+  useEffect(() => {
+    // Check if there is history to go back to
+    if (typeof window !== 'undefined') {
+      setCanGoBack(window.history.length > 1)
+    }
+  }, [])
 
   useEffect(() => {
     async function fetchCoverDetail() {
@@ -112,85 +123,139 @@ export default function CoverDetailPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col">
+    <main className="relative flex min-h-screen flex-col overflow-hidden">
       <div className="container mx-auto max-w-5xl px-4 py-8 sm:py-12">
+        {/* Back Button */}
+        <div className="mb-8 flex">
+          <Button
+            onClick={() => (canGoBack ? router.back() : router.push('/'))}
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground -ml-2 gap-1.5 px-3 py-5 text-base transition-all hover:cursor-pointer"
+          >
+            <ChevronLeft className="h-5 w-5" />
+            {canGoBack ? '返回上一页' : '返回首页'}
+          </Button>
+        </div>
+
         {/* Main content - responsive layout */}
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+        <div className="grid gap-8 lg:grid-cols-[1fr_400px] lg:gap-12">
           {/* Left: Cover image */}
-          <div className="flex justify-center lg:justify-end">
-            <div className="w-full max-w-xs sm:max-w-sm">
-              <RedEnvelopeCover
-                imageUrl={cover.imageUrl}
-                className="w-full shadow-lg"
-              />
+          <div className="flex flex-col items-center justify-start lg:items-end">
+            <div className="w-full max-w-xs sm:max-w-sm lg:max-w-md">
+              <div className="group relative">
+                {/* Image Glow */}
+                <div className="absolute -inset-4 rounded-[2rem] bg-red-500/10 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
+
+                <RedEnvelopeCover
+                  imageUrl={cover.imageUrl}
+                  className="relative w-full rounded-2xl shadow-2xl transition-transform duration-500 group-hover:scale-[1.01]"
+                />
+              </div>
+
+              {/* Mobile-only Action Buttons */}
+              <div className="mt-8 flex w-full flex-col gap-3 lg:hidden">
+                <Button
+                  asChild
+                  size="lg"
+                  className="hb-btn-primary w-full py-6"
+                >
+                  <Link href="/">
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    我也要生成
+                  </Link>
+                </Button>
+                <ShareButton imageId={cover.id} className="w-full py-6" />
+              </div>
             </div>
           </div>
 
           {/* Right: Info section */}
-          <div className="flex flex-col justify-center space-y-6">
-            {/* Creator info */}
-            <div className="flex items-center gap-3">
-              {cover.creator.avatarUrl ? (
-                <Image
-                  src={cover.creator.avatarUrl}
-                  alt={cover.creator.nickname}
-                  width={48}
-                  height={48}
-                  className="rounded-full"
-                  unoptimized
-                />
-              ) : (
-                <div className="bg-muted flex h-12 w-12 items-center justify-center rounded-full">
-                  <User className="text-muted-foreground h-6 w-6" />
+          <div className="flex flex-col gap-6">
+            <Card className="border-slate-200/60 bg-white/80 shadow-xl backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <Badge
+                    variant="secondary"
+                    className="cursor-default bg-red-100 text-red-600 hover:bg-red-100"
+                  >
+                    红包封面详情
+                  </Badge>
+                  <LikeButton
+                    imageId={cover.id}
+                    initialLikesCount={cover.likesCount}
+                    initialHasLiked={cover.hasLiked}
+                    variant="minimal"
+                  />
                 </div>
-              )}
-              <div>
-                <p className="text-foreground text-lg font-medium">
-                  {cover.creator.nickname}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  创建于 {formatDate(cover.createdAt)}
-                </p>
-              </div>
-            </div>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                {/* Creator info */}
+                <div className="flex items-center gap-4">
+                  {cover.creator.avatarUrl ? (
+                    <div className="ring-offset-background relative h-14 w-14 overflow-hidden rounded-full ring-2 ring-red-100 transition-transform hover:scale-105">
+                      <Image
+                        src={cover.creator.avatarUrl}
+                        alt={cover.creator.nickname}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="bg-muted flex h-14 w-14 items-center justify-center rounded-full ring-2 ring-slate-100">
+                      <User className="text-muted-foreground h-7 w-7" />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className="text-foreground text-xl font-bold tracking-tight">
+                      {cover.creator.nickname}
+                    </h3>
+                    <p className="text-muted-foreground mt-0.5 text-sm">
+                      创建于 {formatDate(cover.createdAt)}
+                    </p>
+                  </div>
+                </div>
 
-            {/* Prompt */}
-            <div className="space-y-3">
-              <h2 className="text-foreground text-base font-medium">提示词</h2>
-              <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-foreground text-base leading-relaxed">
-                  {cover.prompt || '暂无描述'}
-                </p>
-              </div>
-            </div>
+                {/* Prompt */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-4 w-1 rounded-full bg-red-500" />
+                    <h2 className="text-foreground text-base font-semibold">
+                      设计描述
+                    </h2>
+                  </div>
+                  <div className="relative overflow-hidden rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                    <p className="text-foreground text-base leading-relaxed break-all italic opacity-90">
+                      &quot;{cover.prompt || '暂无描述'}&quot;
+                    </p>
+                  </div>
+                </div>
 
-            {/* Like section */}
-            <div className="space-y-3">
-              <h2 className="text-foreground text-base font-medium">点赞</h2>
-              <LikeButton
-                imageId={cover.id}
-                initialLikesCount={cover.likesCount}
-                initialHasLiked={cover.hasLiked}
-              />
-            </div>
+                {/* Desktop Action Buttons */}
+                <div className="hidden flex-col gap-4 pt-4 lg:flex">
+                  <Button
+                    asChild
+                    size="lg"
+                    className="hb-btn-primary h-14 w-full text-lg shadow-lg shadow-red-500/20"
+                  >
+                    <Link href="/">
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      我也要生成
+                    </Link>
+                  </Button>
 
-            {/* Action buttons */}
-            <div className="flex flex-col gap-3 pt-4 sm:flex-row">
-              <Button
-                asChild
-                size="lg"
-                className="hb-btn-primary min-h-[32px] flex-1 py-3 text-base"
-              >
-                <Link href="/">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  我也要生成
-                </Link>
-              </Button>
+                  <ShareButton
+                    imageId={cover.id}
+                    className="h-14 w-full text-lg"
+                  />
+                </div>
+              </CardContent>
+            </Card>
 
-              <ShareButton
-                imageId={cover.id}
-                className="min-h-[32px] flex-1 py-3 text-base"
-              />
+            {/* Additional info */}
+            <div className="text-muted-foreground/60 mt-2 text-center text-xs">
+              提示：生成的封面图片归创建者所有，请遵循相关法律法规使用。
             </div>
           </div>
         </div>

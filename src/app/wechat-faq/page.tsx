@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Layout, Link as LinkIcon } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: '微信红包封面常见问题',
-  description:
-    '微信红包封面常见问题解答，包括个人能否申请、价格多少、审核时间、尺寸要求、视频号认证条件等问题。',
+  title: '微信规范指南',
+  description: '微信红包封面官方平台的申请要求与常见问题解答。',
   keywords: [
     '微信红包封面价格',
     '红包封面个人能做吗',
@@ -56,7 +56,7 @@ const faqs = [
   {
     question: '封面图片有什么内容限制？',
     answer:
-      '不能包含违法违规、色情低俗、暴力血腥、政治敏感、侵权等内容。另外，不建议直接使用他人的照片或明星肖像，以免侵权被驳回。建议使用原创设计或 AI 生成的图片。',
+      '不能包含违法违规、色情低俗、暴力血腥、政治敏感、侵权等内容。另外，不建议直接使用他人的照片 or 明星肖像，以免侵权被驳回。建议使用原创设计或 AI 生成的图片。',
   },
   {
     question: '红包封面可以用多久？',
@@ -68,35 +68,28 @@ const faqs = [
     answer:
       '审核不通过时，平台会告知具体原因。常见原因包括：图片模糊、包含违规内容、涉嫌侵权等。根据反馈修改后可以重新提交，修改后的审核时间同样是 3 个工作日内。',
   },
-  {
-    question: '可以给别人设计红包封面吗？',
-    answer:
-      '可以的。你可以帮别人设计封面图片，但上传到微信平台需要使用对方的账号。每个账号定制的封面只能从该账号发放，不能转让给其他账号。',
-  },
-  {
-    question: '除了静态图片，可以做动态封面吗？',
-    answer:
-      '微信支持上传视频作为封面故事，但主封面目前只支持静态图片。视频格式的封面故事可以让红包更生动，但需要额外准备视频素材。',
-  },
 ]
 
 export default function WechatFAQPage() {
   return (
     <main className="flex min-h-screen flex-col items-center">
-      <div className="container max-w-3xl px-4 py-14 sm:py-20">
-        <header className="mb-10 text-center sm:mb-14">
-          <h1 className="text-primary mb-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-            微信红包封面常见问题
+      <div className="container max-w-4xl px-4 py-12 sm:py-20">
+        <header className="mb-12 text-center sm:mb-20">
+          <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
+            微信规范指南
           </h1>
-          <p className="hb-section-subtitle text-base sm:text-lg">
-            关于微信红包封面申请的常见问题解答
+          <p className="hb-section-subtitle text-lg sm:text-xl">
+            关于微信红包封面官方平台的申请要求与常见问题
           </p>
         </header>
 
-        <div className="space-y-6">
+        <div className="grid gap-6 sm:grid-cols-2">
           {faqs.map((faq, index) => (
-            <div key={index} className="hb-card p-6">
-              <h3 className="text-foreground mb-2 text-base font-semibold">
+            <div
+              key={index}
+              className="hb-card group p-8 transition-all hover:bg-white/80 hover:shadow-md"
+            >
+              <h3 className="text-foreground mb-3 text-lg font-bold">
                 {faq.question}
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -106,45 +99,53 @@ export default function WechatFAQPage() {
           ))}
         </div>
 
-        {/* 相关链接 */}
-        <div className="mt-10 rounded-xl border border-amber-200/70 bg-amber-50/70 p-6">
-          <h2 className="mb-4 font-semibold text-amber-900">相关资源</h2>
-          <ul className="space-y-2 text-sm text-amber-800">
-            <li>
-              <span className="mr-2">📖</span>
-              <Link
-                href="/tutorial"
-                className="underline underline-offset-4 hover:opacity-80"
-              >
-                微信红包封面配置教程
-              </Link>
-              <span className="text-amber-700"> - 详细的上传步骤指南</span>
-            </li>
-            <li>
-              <span className="mr-2">🔗</span>
-              <a
-                href="https://cover.weixin.qq.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline underline-offset-4 hover:opacity-80"
-              >
-                微信红包封面开放平台
-              </a>
-              <span className="text-amber-700"> - 官方申请入口</span>
-            </li>
-          </ul>
+        {/* 相关资源 */}
+        <div className="bg-accent/30 mt-20 rounded-2xl border p-8 sm:p-12">
+          <h2 className="mb-8 text-center text-2xl font-bold">相关资源</h2>
+          <div className="grid gap-6 sm:grid-cols-2">
+            <Link
+              href="/tutorial"
+              className="hb-card flex items-center gap-4 bg-white/50 p-6 transition-all hover:bg-white hover:shadow-sm"
+            >
+              <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-full">
+                <Layout className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold">配置教程</h3>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  详细的上传步骤指南
+                </p>
+              </div>
+            </Link>
+            <a
+              href="https://cover.weixin.qq.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hb-card flex items-center gap-4 bg-white/50 p-6 transition-all hover:bg-white hover:shadow-sm"
+            >
+              <div className="bg-primary/10 text-primary flex h-12 w-12 items-center justify-center rounded-full">
+                <LinkIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="font-bold">开放平台</h3>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  微信官方申请入口
+                </p>
+              </div>
+            </a>
+          </div>
         </div>
 
         {/* CTA */}
-        <div className="mt-10 text-center">
-          <p className="text-muted-foreground mb-4 text-sm">
-            准备好制作你的红包封面了吗？
+        <div className="mt-20 text-center">
+          <p className="text-muted-foreground mb-6 text-sm">
+            准备好制作您的专属红包封面了吗？
           </p>
           <Link
             href="/"
-            className="hb-btn-primary inline-block rounded-lg px-6 py-2 text-sm font-medium text-white transition-colors"
+            className="hb-btn-primary inline-flex items-center gap-2 rounded-xl px-8 py-3 text-base font-bold text-white transition-transform hover:scale-105 active:scale-95"
           >
-            立即生成红包封面 →
+            立即开启 AI 创作 →
           </Link>
         </div>
       </div>

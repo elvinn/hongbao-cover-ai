@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useAuth, useClerk } from '@clerk/nextjs'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/utils/tailwind'
 import { type CoverStyle } from '@/types/hongbao'
 import { useSession } from '@/hooks/use-session'
 import {
@@ -141,52 +142,66 @@ export function GenerationForm({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <h2 className="hb-section-title text-lg">封面描述</h2>
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <h2 className="text-lg font-bold">封面描述</h2>
         <textarea
           id="description"
           ref={descriptionRef}
           value={description}
           onChange={handleDescriptionChange}
-          placeholder="红色背景，祥云线条点缀，温暖喜庆的氛围..."
-          className="border-input/70 bg-background/55 text-foreground placeholder:text-muted-foreground/80 focus-visible:ring-ring/40 w-full rounded-xl border px-4 py-3 text-sm leading-relaxed shadow-sm backdrop-blur-sm focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          placeholder="例如：红色背景，祥云线条点缀，一只可爱的招财猫..."
+          className="border-input/50 bg-background/50 focus-visible:border-primary/50 focus-visible:ring-primary/5 min-h-[120px] w-full resize-none rounded-2xl border px-4 py-3 text-sm leading-relaxed shadow-sm transition-colors focus-visible:ring-4 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           rows={4}
           disabled={isBtnLoading || disabled}
         />
-        <div className="text-muted-foreground flex justify-between text-xs">
+        <div className="text-muted-foreground flex justify-between px-1 text-xs">
           <span>
             {hasTouched && charCount < 4 ? (
-              <span className="text-destructive">至少需要4个字符</span>
+              <span className="text-destructive font-medium">
+                至少需要 4 个字符
+              </span>
             ) : (
-              '描述清晰有助于生成更好的封面'
+              '描述越清晰，生成的封面越精美'
             )}
+          </span>
+          <span className={cn(charCount > 500 ? 'text-destructive' : '')}>
+            {charCount}/500
           </span>
         </div>
       </div>
 
       {error && (
-        <div className="bg-destructive/10 text-destructive rounded-md p-3 text-sm">
+        <div className="bg-destructive/10 text-destructive flex items-center gap-2 rounded-xl p-4 text-sm font-medium">
+          <span className="bg-destructive h-1.5 w-1.5 shrink-0 rounded-full" />
           {error}
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <div className="text-muted-foreground text-sm">
+      <div className="flex items-center justify-between pt-2">
+        <div className="text-muted-foreground text-sm font-medium">
           {isSignedIn && (
-            <>
-              剩余生成次数:{' '}
-              <span className="text-foreground font-medium">
-                {isSessionLoading ? '-' : credits}
+            <div className="flex items-center gap-1.5">
+              <Zap className="h-4 w-4 text-amber-500" />
+              <span>
+                剩余生成次数:{' '}
+                <span className="text-foreground">
+                  {isSessionLoading ? '...' : credits}
+                </span>
               </span>
-            </>
+            </div>
           )}
         </div>
-        <Button onClick={handleGenerate} disabled={!canGenerate} size="lg">
+        <Button
+          onClick={handleGenerate}
+          disabled={!canGenerate}
+          size="lg"
+          className="shadow-primary/20 h-12 rounded-xl px-8 font-bold shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
           {isBtnLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              生成中...
+              生成中
             </>
           ) : (
             getButtonText()

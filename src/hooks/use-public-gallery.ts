@@ -1,4 +1,4 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, type InfiniteData } from '@tanstack/react-query'
 
 export type GallerySortOrder = 'newest' | 'popular'
 
@@ -16,6 +16,10 @@ interface GalleryResponse {
   total: number
   page: number
   pageSize: number
+}
+
+interface UsePublicGalleryOptions {
+  initialData?: InfiniteData<GalleryResponse, number>
 }
 
 const PAGE_SIZE = 12
@@ -40,7 +44,16 @@ async function fetchGalleryImages(
   return response.json()
 }
 
-export function usePublicGallery(sort: GallerySortOrder = 'popular') {
+export function usePublicGallery(
+  sort: GallerySortOrder = 'popular',
+  options?: UsePublicGalleryOptions,
+) {
+  // Check if we have actual initial data (not empty)
+  // For SSR mode: initialData is provided with images
+  // For CSR mode: initialData is undefined, will fetch on mount
+  const hasInitialData =
+    sort === 'popular' && !!options?.initialData?.pages?.[0]?.images?.length
+
   const query = useInfiniteQuery({
     queryKey: ['public-gallery', sort],
     queryFn: ({ pageParam }) => fetchGalleryImages(pageParam, sort),
@@ -51,6 +64,11 @@ export function usePublicGallery(sort: GallerySortOrder = 'popular') {
       }
       return undefined
     },
+    initialData: hasInitialData ? options?.initialData : undefined,
+    // Prevent refetch on mount when we have SSR data
+    // For CSR mode (no initial data), fetch immediately
+    staleTime: hasInitialData ? 60 * 1000 : 0, // 1 minute for SSR data
+    refetchOnMount: !hasInitialData,
   })
 
   // Flatten all pages into a single array of images

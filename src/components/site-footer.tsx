@@ -40,7 +40,7 @@ export function SiteFooter() {
             <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
               输入一句话，AI 一键生成微信红包封面。
               <br />
-              封面尺寸 957×1278 像素，完美适配微信红包封面规范。
+              完美适配微信红包封面规范。
             </p>
           </div>
 

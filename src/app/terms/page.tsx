@@ -38,7 +38,7 @@ export default function TermsPage() {
               2. 用户账户
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              使用本服务的部分功能需要注册账户。您同意：
+              使用本服务的部分功能需要注册账户。你同意：
             </p>
             <ul className="text-muted-foreground mt-3 list-inside list-disc space-y-2 text-sm">
               <li>提供真实、准确、完整的注册信息</li>
@@ -68,7 +68,7 @@ export default function TermsPage() {
               4. 使用规范
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              您在使用本服务时不得：
+              你在使用本服务时不得：
             </p>
             <ul className="text-muted-foreground mt-3 list-inside list-disc space-y-2 text-sm">
               <li>生成违反法律法规或公序良俗的内容</li>
@@ -142,7 +142,7 @@ export default function TermsPage() {
               9. 联系我们
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              如果您对本服务协议有任何疑问，请通过以下方式联系我们：
+              如果你对本服务协议有任何疑问，请通过以下方式联系我们：
             </p>
             <p className="text-muted-foreground mt-3 text-sm">
               邮箱：

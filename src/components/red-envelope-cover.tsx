@@ -27,7 +27,7 @@ export function RedEnvelopeCover({
   return (
     <div
       className={cn(
-        'relative aspect-[1/1.65] overflow-hidden rounded-lg',
+        'relative aspect-[1/1.65] overflow-hidden rounded-lg shadow-md',
         className,
       )}
       style={style}

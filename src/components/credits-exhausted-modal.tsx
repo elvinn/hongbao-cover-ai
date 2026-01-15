@@ -26,7 +26,7 @@ export function CreditsExhaustedModal({
         <DialogHeader>
           <DialogTitle>生成次数已用完</DialogTitle>
           <DialogDescription>
-            您的套餐生成次数已全部使用，请购买新的套餐继续生成
+            你的套餐生成次数已全部使用，请购买新的套餐继续生成
           </DialogDescription>
         </DialogHeader>
 

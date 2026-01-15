@@ -11,6 +11,7 @@ interface LikeButtonProps {
   initialLikesCount: number
   initialHasLiked: boolean
   className?: string
+  variant?: 'default' | 'minimal'
 }
 
 export function LikeButton({
@@ -18,6 +19,7 @@ export function LikeButton({
   initialLikesCount,
   initialHasLiked,
   className,
+  variant = 'default',
 }: LikeButtonProps) {
   const { isSignedIn } = useAuth()
   const { redirectToSignIn } = useClerk()
@@ -74,29 +76,57 @@ export function LikeButton({
     }
   }, [imageId, isSignedIn, hasLiked, likesCount, redirectToSignIn])
 
+  if (variant === 'minimal') {
+    return (
+      <button
+        onClick={handleLike}
+        className={cn(
+          'group flex cursor-pointer items-center gap-1.5 transition-all active:scale-95',
+          hasLiked
+            ? 'text-red-500'
+            : 'text-muted-foreground hover:text-red-500',
+          className,
+        )}
+      >
+        <Heart
+          className={cn(
+            'h-5 w-5 transition-all group-hover:scale-110',
+            hasLiked ? 'fill-red-500' : '',
+            isLoading && 'animate-pulse',
+          )}
+        />
+        <span className="text-base font-semibold tabular-nums">
+          {likesCount.toLocaleString()}
+        </span>
+      </button>
+    )
+  }
+
   return (
     <Button
       variant="ghost"
       size="lg"
       onClick={handleLike}
       className={cn(
-        'group flex h-auto cursor-pointer items-center gap-2 px-4 py-2',
+        'group flex h-auto cursor-pointer items-center gap-2 px-4 py-2 transition-all active:scale-95',
         className,
       )}
     >
       <Heart
         className={cn(
-          'h-7 w-7 transition-all',
+          'h-6 w-6 transition-all group-hover:scale-110',
           hasLiked
             ? 'fill-red-500 text-red-500'
-            : 'text-muted-foreground group-hover:text-red-400',
+            : 'text-muted-foreground group-hover:text-red-500',
           isLoading && 'animate-pulse',
         )}
       />
       <span
         className={cn(
-          'text-xl font-medium',
-          hasLiked ? 'text-red-500' : 'text-muted-foreground',
+          'text-lg font-semibold tabular-nums transition-colors',
+          hasLiked
+            ? 'text-red-500'
+            : 'text-muted-foreground group-hover:text-red-500',
         )}
       >
         {likesCount.toLocaleString()} 喜欢

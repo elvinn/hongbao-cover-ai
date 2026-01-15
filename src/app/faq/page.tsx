@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Mail } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: '常见问题',
@@ -48,29 +49,28 @@ const faqs = [
     answer:
       '由于数字商品的特殊性，购买后一般不支持退款。如遇特殊情况，请联系客服咨询。',
   },
-  {
-    question: '如何联系客服？',
-    answer: '如有问题或建议，欢迎通过邮件联系我们：support@elvinn.wiki',
-  },
 ]
 
 export default function FAQPage() {
   return (
     <main className="flex min-h-screen flex-col items-center">
-      <div className="container max-w-3xl px-4 py-14 sm:py-20">
-        <header className="mb-10 text-center sm:mb-14">
-          <h1 className="text-primary mb-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+      <div className="container max-w-4xl px-4 py-12 sm:py-20">
+        <header className="mb-12 text-center sm:mb-20">
+          <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
             常见问题
           </h1>
-          <p className="hb-section-subtitle text-base sm:text-lg">
-            关于红包封面 AI 的常见问题解答
+          <p className="hb-section-subtitle text-lg sm:text-xl">
+            关于红包封面 AI 的使用疑问，您都可以在这里找到答案
           </p>
         </header>
 
-        <div className="space-y-6">
+        <div className="grid gap-6 sm:grid-cols-2">
           {faqs.map((faq, index) => (
-            <div key={index} className="hb-card p-6">
-              <h3 className="text-foreground mb-2 text-base font-semibold">
+            <div
+              key={index}
+              className="hb-card group p-8 transition-all hover:bg-white/80 hover:shadow-md"
+            >
+              <h3 className="text-foreground mb-3 text-lg font-bold">
                 {faq.question}
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
@@ -80,10 +80,22 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-muted-foreground text-sm">
-            没有找到答案？欢迎联系我们 support@elvinn.wiki
+        <div className="bg-accent/30 mt-20 rounded-2xl border p-8 text-center sm:p-12">
+          <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+            <Mail className="h-6 w-6" />
+          </div>
+          <h2 className="text-xl font-bold">还有其他问题？</h2>
+          <p className="text-muted-foreground mt-2 text-sm">
+            没有找到您需要的答案？欢迎随时通过邮件联系我们的技术支持。
           </p>
+          <div className="mt-6 flex justify-center">
+            <a
+              href="mailto:support@elvinn.wiki"
+              className="hb-btn-primary inline-flex items-center gap-2 rounded-lg px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            >
+              联系客服 support@elvinn.wiki
+            </a>
+          </div>
         </div>
       </div>
     </main>

@@ -6,11 +6,16 @@ import Link from 'next/link'
 import { useAuth } from '@clerk/nextjs'
 import { ChevronDown, ImageIcon, Loader2, Sparkles } from 'lucide-react'
 import { GalleryCard } from '@/components/gallery-card'
+import { GallerySkeleton } from '@/components/gallery-skeleton'
 import { useMyGallery, type GallerySortOrder } from '@/hooks/use-my-gallery'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/utils/tailwind'
+import { Badge } from '@/components/ui/badge'
+import {
+  SegmentToggle,
+  type SegmentOption,
+} from '@/components/ui/segment-toggle'
 
-export default function GalleryPage() {
+export default function MyGalleryPage() {
   const router = useRouter()
   const { isLoaded, isSignedIn } = useAuth()
   const [sort, setSort] = useState<GallerySortOrder>('newest')
@@ -56,8 +61,8 @@ export default function GalleryPage() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  const handleSortChange = useCallback((newSort: GallerySortOrder) => {
-    setSort(newSort)
+  const handleSortChange = useCallback((newSort: string) => {
+    setSort(newSort as GallerySortOrder)
   }, [])
 
   const handleLoadMore = useCallback(() => {
@@ -66,27 +71,42 @@ export default function GalleryPage() {
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
+  const sortOptions: SegmentOption<GallerySortOrder>[] = [
+    { value: 'newest', label: '最新发布' },
+    { value: 'oldest', label: '最早发布' },
+  ]
+
   // Show loading while checking auth
   if (!isLoaded || !isSignedIn) {
     return (
       <main className="flex min-h-screen items-center justify-center">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <Loader2 className="h-8 w-8 animate-spin text-red-500" />
       </main>
     )
   }
 
   return (
-    <main className="flex min-h-screen flex-col">
-      <div className="container mx-auto max-w-5xl px-4 py-8 sm:py-12">
+    <main className="relative flex min-h-screen flex-col overflow-hidden">
+      <div className="container mx-auto max-w-5xl px-4 py-8 sm:py-16">
         {/* Header */}
-        <header className="mb-8">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h1 className="text-primary text-2xl font-semibold tracking-tight sm:text-3xl">
-                我的封面
-              </h1>
+        <header className="mb-10">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                  我的封面
+                </h1>
+                {!isLoading && (
+                  <Badge
+                    variant="secondary"
+                    className="border-red-100 bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600 hover:bg-red-50"
+                  >
+                    {total}
+                  </Badge>
+                )}
+              </div>
               {!isLoading && (
-                <p className="text-muted-foreground mt-1 text-sm">
+                <p className="text-base text-slate-500">
                   共创作了 {total} 件独一无二的封面设计
                 </p>
               )}
@@ -94,32 +114,12 @@ export default function GalleryPage() {
 
             {/* Sort Toggle */}
             {images.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground text-sm">排序方式:</span>
-                <div className="flex gap-1 rounded-lg bg-amber-50/50 p-1">
-                  <button
-                    onClick={() => handleSortChange('newest')}
-                    className={cn(
-                      'cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                      sort === 'newest'
-                        ? 'bg-white text-amber-900 shadow-sm'
-                        : 'text-amber-700 hover:text-amber-900',
-                    )}
-                  >
-                    最新
-                  </button>
-                  <button
-                    onClick={() => handleSortChange('oldest')}
-                    className={cn(
-                      'cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-                      sort === 'oldest'
-                        ? 'bg-white text-amber-900 shadow-sm'
-                        : 'text-amber-700 hover:text-amber-900',
-                    )}
-                  >
-                    最早
-                  </button>
-                </div>
+              <div className="flex items-center self-start sm:self-auto">
+                <SegmentToggle
+                  options={sortOptions}
+                  value={sort}
+                  onChange={handleSortChange}
+                />
               </div>
             )}
           </div>
@@ -127,34 +127,30 @@ export default function GalleryPage() {
 
         {/* Error State */}
         {error && (
-          <div className="mb-8 rounded-lg bg-red-50/70 p-4 text-center text-red-700">
-            <p className="text-sm">{error}</p>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="text-primary h-8 w-8 animate-spin" />
-            <p className="text-muted-foreground mt-4 text-sm">加载中...</p>
+          <div className="mb-10 rounded-2xl border border-red-100 bg-red-50/50 p-4 text-center backdrop-blur-sm">
+            <p className="text-sm font-medium text-red-600">{error}</p>
           </div>
         )}
 
         {/* Empty State */}
         {!isLoading && images.length === 0 && (
-          <div className="hb-card flex flex-col items-center justify-center px-6 py-16 text-center">
-            <div className="bg-primary/10 mb-6 rounded-full p-4">
-              <ImageIcon className="text-primary h-12 w-12" />
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white/50 px-6 py-20 text-center backdrop-blur-sm">
+            <div className="mb-6 rounded-2xl bg-red-50 p-4 ring-8 ring-red-50/50">
+              <ImageIcon className="h-12 w-12 text-red-400" />
             </div>
-            <h2 className="text-foreground mb-2 text-xl font-semibold">
+            <h2 className="mb-2 text-2xl font-bold text-slate-900">
               还没有生成过封面
             </h2>
-            <p className="text-muted-foreground mb-6 max-w-sm text-sm">
+            <p className="mb-8 max-w-sm text-slate-500">
               快去体验 AI 生成红包封面的魔法吧，只需输入描述，即可获得专属封面
             </p>
-            <Button asChild className="hb-btn-primary">
+            <Button
+              asChild
+              size="lg"
+              className="hb-btn-primary h-12 px-8 text-base shadow-lg shadow-red-500/20"
+            >
               <Link href="/">
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Sparkles className="mr-2 h-5 w-5" />
                 立即体验
               </Link>
             </Button>
@@ -162,9 +158,9 @@ export default function GalleryPage() {
         )}
 
         {/* Gallery Grid */}
-        {!isLoading && images.length > 0 && (
+        {images.length > 0 && (
           <>
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:gap-8 md:grid-cols-3 lg:grid-cols-4">
               {images.map((image) => (
                 <GalleryCard key={image.id} image={image} />
               ))}
@@ -173,33 +169,38 @@ export default function GalleryPage() {
             {/* Load More Section */}
             <div
               ref={loadMoreRef}
-              className="mt-10 flex flex-col items-center justify-center"
+              className="mt-16 flex flex-col items-center justify-center pb-8"
             >
-              {isFetchingNextPage && (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="text-primary h-5 w-5 animate-spin" />
-                  <span className="text-muted-foreground text-sm">
-                    加载更多...
+              {isFetchingNextPage ? (
+                <div className="flex items-center gap-3 rounded-full border border-slate-100 bg-white px-6 py-3 shadow-sm">
+                  <Loader2 className="h-5 w-5 animate-spin text-red-500" />
+                  <span className="text-sm font-bold text-slate-600">
+                    加载中...
                   </span>
                 </div>
-              )}
-
-              {hasNextPage && !isFetchingNextPage && (
+              ) : hasNextPage ? (
                 <button
                   onClick={handleLoadMore}
-                  className="text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 text-sm transition-colors"
+                  className="group flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-8 py-3 text-sm font-bold text-slate-600 shadow-sm transition-all hover:border-red-200 hover:text-red-500 hover:shadow-md"
                 >
                   加载更多作品
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
                 </button>
-              )}
-
-              {!hasNextPage && images.length > 0 && (
-                <p className="text-muted-foreground text-sm">已加载全部作品</p>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <div className="h-px w-8 bg-slate-200" />
+                  <p className="text-sm font-medium text-slate-400 italic">
+                    已加载全部作品
+                  </p>
+                  <div className="h-px w-8 bg-slate-200" />
+                </div>
               )}
             </div>
           </>
         )}
+
+        {/* Initial Loading State */}
+        {isLoading && images.length === 0 && <GallerySkeleton />}
       </div>
     </main>
   )

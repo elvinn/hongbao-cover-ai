@@ -3,13 +3,15 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, BookOpen, HelpCircle, MessageCircle } from 'lucide-react'
 import { AuthButton } from '@/components/auth-button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/utils/tailwind'
 
@@ -20,9 +22,24 @@ const navItems = [
 ]
 
 const helpItems = [
-  { href: '/tutorial', label: '微信红包封面配置教程' },
-  { href: '/wechat-faq', label: '微信红包封面常见问题' },
-  { href: '/faq', label: '常见问题（FAQ）' },
+  {
+    href: '/tutorial',
+    label: '配置教程',
+    icon: BookOpen,
+    description: '手把手教你上传封面',
+  },
+  {
+    href: '/wechat-faq',
+    label: '微信规范',
+    icon: MessageCircle,
+    description: '官方审核要求说明',
+  },
+  {
+    href: '/faq',
+    label: '常见问题',
+    icon: HelpCircle,
+    description: '使用过程中的疑难解答',
+  },
 ]
 
 export function SiteHeader() {
@@ -73,7 +90,7 @@ export function SiteHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 className={cn(
-                  'flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
+                  'flex cursor-pointer items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
                   isHelpActive
                     ? 'bg-accent text-accent-foreground'
                     : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
@@ -82,20 +99,36 @@ export function SiteHeader() {
                 帮助
                 <ChevronDown className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                {helpItems.map((item) => (
-                  <DropdownMenuItem key={item.href} asChild>
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        'cursor-pointer',
-                        pathname === item.href && 'bg-accent',
-                      )}
+              <DropdownMenuContent align="start" className="w-56 p-2">
+                <DropdownMenuGroup>
+                  {helpItems.map((item) => (
+                    <DropdownMenuItem
+                      key={item.href}
+                      asChild
+                      className="focus:bg-accent cursor-pointer rounded-lg p-2"
                     >
-                      {item.label}
-                    </Link>
-                  </DropdownMenuItem>
-                ))}
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          'flex items-start gap-3',
+                          pathname === item.href && 'bg-accent',
+                        )}
+                      >
+                        <div className="bg-primary/10 text-primary mt-0.5 rounded-md p-1.5">
+                          <item.icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm leading-none font-medium">
+                            {item.label}
+                          </span>
+                          <span className="text-muted-foreground text-[11px] leading-tight">
+                            {item.description}
+                          </span>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </nav>
@@ -125,7 +158,7 @@ export function SiteHeader() {
           <DropdownMenu>
             <DropdownMenuTrigger
               className={cn(
-                'flex items-center gap-0.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors outline-none',
+                'flex cursor-pointer items-center gap-0.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors outline-none',
                 isHelpActive
                   ? 'bg-accent text-accent-foreground'
                   : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',
@@ -134,20 +167,27 @@ export function SiteHeader() {
               帮助
               <ChevronDown className="h-3 w-3" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {helpItems.map((item) => (
-                <DropdownMenuItem key={item.href} asChild>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      'cursor-pointer',
-                      pathname === item.href && 'bg-accent',
-                    )}
+            <DropdownMenuContent align="end" className="w-48 p-2">
+              <DropdownMenuGroup>
+                {helpItems.map((item) => (
+                  <DropdownMenuItem
+                    key={item.href}
+                    asChild
+                    className="focus:bg-accent cursor-pointer rounded-lg p-2"
                   >
-                    {item.label}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        'flex items-center gap-2',
+                        pathname === item.href && 'bg-accent',
+                      )}
+                    >
+                      <item.icon className="text-primary h-3.5 w-3.5" />
+                      <span className="text-xs font-medium">{item.label}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuGroup>
             </DropdownMenuContent>
           </DropdownMenu>
         </nav>

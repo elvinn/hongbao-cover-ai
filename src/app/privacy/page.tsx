@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: '隐私政策',
   description:
-    '红包封面 AI 隐私政策，详细说明我们如何收集、使用和保护您的个人信息。',
+    '红包封面 AI 隐私政策，详细说明我们如何收集、使用和保护你的个人信息。',
   keywords: ['红包封面AI隐私政策', '隐私保护', '数据安全'],
 }
 
@@ -26,11 +26,11 @@ export default function PrivacyPage() {
               1. 信息收集
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              我们收集您在使用红包封面 AI 服务时提供的信息，包括但不限于：
+              我们收集你在使用红包封面 AI 服务时提供的信息，包括但不限于：
             </p>
             <ul className="text-muted-foreground mt-3 list-inside list-disc space-y-2 text-sm">
               <li>注册账户时提供的电子邮件地址</li>
-              <li>您输入的红包封面描述文字</li>
+              <li>你输入的红包封面描述文字</li>
               <li>支付交易相关信息（由第三方支付服务商 Stripe 处理）</li>
               <li>设备信息和访问日志</li>
             </ul>
@@ -45,9 +45,9 @@ export default function PrivacyPage() {
             </p>
             <ul className="text-muted-foreground mt-3 list-inside list-disc space-y-2 text-sm">
               <li>提供、维护和改进我们的服务</li>
-              <li>处理您的交易和发送相关通知</li>
-              <li>响应您的请求和提供客户支持</li>
-              <li>发送服务更新和营销信息（您可随时取消订阅）</li>
+              <li>处理你的交易和发送相关通知</li>
+              <li>响应你的请求和提供客户支持</li>
+              <li>发送服务更新和营销信息（你可随时取消订阅）</li>
               <li>检测、预防和解决技术问题及安全问题</li>
             </ul>
           </section>
@@ -57,10 +57,10 @@ export default function PrivacyPage() {
               3. 信息共享
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              我们不会出售您的个人信息。我们可能在以下情况下共享您的信息：
+              我们不会出售你的个人信息。我们可能在以下情况下共享你的信息：
             </p>
             <ul className="text-muted-foreground mt-3 list-inside list-disc space-y-2 text-sm">
-              <li>经您同意或按您的指示</li>
+              <li>经你同意或按你的指示</li>
               <li>与提供服务所需的第三方服务提供商（如支付处理商 Stripe）</li>
               <li>遵守法律义务或响应合法的法律程序</li>
               <li>保护我们的权利、隐私、安全或财产</li>
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
               4. 数据安全
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              我们采取合理的技术和组织措施来保护您的个人信息免受未经授权的访问、使用或泄露。所有数据传输均使用
+              我们采取合理的技术和组织措施来保护你的个人信息免受未经授权的访问、使用或泄露。所有数据传输均使用
               SSL/TLS 加密，支付信息由 PCI DSS 合规的 Stripe 处理。
             </p>
           </section>
@@ -83,22 +83,22 @@ export default function PrivacyPage() {
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
               我们使用 Cookie
-              和类似技术来改善用户体验、分析服务使用情况。您可以通过浏览器设置控制
+              和类似技术来改善用户体验、分析服务使用情况。你可以通过浏览器设置控制
               Cookie 的使用，但这可能影响某些功能的正常使用。
             </p>
           </section>
 
           <section className="hb-card mb-6 p-6">
             <h2 className="text-foreground mb-4 text-lg font-semibold">
-              6. 您的权利
+              6. 你的权利
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              您有权：
+              你有权：
             </p>
             <ul className="text-muted-foreground mt-3 list-inside list-disc space-y-2 text-sm">
-              <li>访问和获取您的个人信息副本</li>
+              <li>访问和获取你的个人信息副本</li>
               <li>更正不准确的个人信息</li>
-              <li>请求删除您的个人信息</li>
+              <li>请求删除你的个人信息</li>
               <li>反对或限制某些处理活动</li>
               <li>撤回同意（不影响撤回前处理的合法性）</li>
             </ul>
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
               7. 联系我们
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              如果您对本隐私政策有任何疑问或需要行使您的权利，请通过以下方式联系我们：
+              如果你对本隐私政策有任何疑问或需要行使你的权利，请通过以下方式联系我们：
             </p>
             <p className="text-muted-foreground mt-3 text-sm">
               邮箱：
@@ -127,7 +127,7 @@ export default function PrivacyPage() {
               8. 政策更新
             </h2>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              我们可能会不时更新本隐私政策。更新后的政策将在本页面发布，并注明最后更新日期。我们建议您定期查阅本政策以了解任何变更。继续使用我们的服务即表示您接受更新后的隐私政策。
+              我们可能会不时更新本隐私政策。更新后的政策将在本页面发布，并注明最后更新日期。我们建议你定期查阅本政策以了解任何变更。继续使用我们的服务即表示你接受更新后的隐私政策。
             </p>
           </section>
         </div>
