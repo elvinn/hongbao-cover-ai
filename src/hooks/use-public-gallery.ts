@@ -9,6 +9,7 @@ export interface PublicGalleryImage {
   likesCount: number
   prompt: string
   createdAt: string
+  hasLiked: boolean
 }
 
 interface GalleryResponse {

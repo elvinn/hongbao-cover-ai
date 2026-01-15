@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 import { createServiceRoleClient } from '@/supabase/server'
 import { getCdnUrl } from '@/utils/r2-storage'
 import { PUBLIC_GALLERY_PAGE_SIZE } from '@/config/pagination'
@@ -28,6 +29,9 @@ export async function GET(request: NextRequest) {
         parseInt(searchParams.get('pageSize') || String(DEFAULT_PAGE_SIZE), 10),
       ),
     )
+
+    // 获取当前用户 ID（可选，未登录时为 null）
+    const { userId } = await auth()
 
     const offset = (page - 1) * pageSize
     const supabase = createServiceRoleClient()
@@ -87,6 +91,19 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // 如果用户已登录，批量查询点赞状态
+    let likedImageIds: Set<string> = new Set()
+    if (userId && images && images.length > 0) {
+      const imageIds = images.map((img) => img.id)
+      const { data: likes } = await supabase
+        .from('image_likes')
+        .select('image_id')
+        .eq('user_id', userId)
+        .in('image_id', imageIds)
+
+      likedImageIds = new Set(likes?.map((l) => l.image_id) || [])
+    }
+
     // 处理图片 URL（使用原图 CDN URL）
     const processedImages = (images || []).map((image) => {
       const imageUrl = image.original_key
@@ -104,6 +121,7 @@ export async function GET(request: NextRequest) {
         likesCount: image.likes_count,
         prompt: generationTask?.prompt || '',
         createdAt: image.created_at,
+        hasLiked: likedImageIds.has(image.id),
       }
     })
 

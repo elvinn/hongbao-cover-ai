@@ -12,6 +12,7 @@ interface LikeButtonProps {
   initialHasLiked: boolean
   className?: string
   variant?: 'default' | 'minimal'
+  size?: 'sm' | 'default'
 }
 
 export function LikeButton({
@@ -20,6 +21,7 @@ export function LikeButton({
   initialHasLiked,
   className,
   variant = 'default',
+  size = 'default',
 }: LikeButtonProps) {
   const { isSignedIn } = useAuth()
   const { redirectToSignIn } = useClerk()
@@ -77,25 +79,35 @@ export function LikeButton({
   }, [imageId, isSignedIn, hasLiked, likesCount, redirectToSignIn])
 
   if (variant === 'minimal') {
+    const isSmall = size === 'sm'
     return (
       <button
         onClick={handleLike}
         className={cn(
-          'group flex cursor-pointer items-center gap-1.5 transition-all active:scale-95',
+          'group flex cursor-pointer items-center transition-all active:scale-95',
+          isSmall ? 'gap-1' : 'gap-1.5',
+          className,
+          // 颜色类放最后，确保覆盖 className 传入的颜色
           hasLiked
             ? 'text-red-500'
             : 'text-muted-foreground hover:text-red-500',
-          className,
         )}
       >
         <Heart
           className={cn(
-            'h-5 w-5 transition-all group-hover:scale-110',
-            hasLiked ? 'fill-red-500' : '',
+            'transition-all group-hover:scale-110',
+            isSmall ? 'h-3 w-3' : 'h-5 w-5',
+            // 喜欢：实心红色；未喜欢：空心描边
+            hasLiked ? 'fill-red-500 text-red-500' : '',
             isLoading && 'animate-pulse',
           )}
         />
-        <span className="text-base font-semibold tabular-nums">
+        <span
+          className={cn(
+            'font-medium tabular-nums',
+            isSmall ? 'text-[11px]' : 'text-base font-semibold',
+          )}
+        >
           {likesCount.toLocaleString()}
         </span>
       </button>

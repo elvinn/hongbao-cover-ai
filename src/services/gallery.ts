@@ -11,6 +11,7 @@ export interface GalleryImage {
   likesCount: number
   prompt: string
   createdAt: string
+  hasLiked: boolean
 }
 
 export interface GalleryResponse {
@@ -84,6 +85,8 @@ export async function fetchPublicGalleryImages(
   }
 
   // Process image URLs (use original images)
+  // SSR 场景下无法获取用户登录状态，hasLiked 默认为 false
+  // 客户端渲染后通过 API 获取正确的点赞状态
   const processedImages = (images || []).map((image) => {
     const imageUrl = image.original_key
       ? getCdnUrl(image.original_key, CDN_DOMAIN)
@@ -100,6 +103,7 @@ export async function fetchPublicGalleryImages(
       likesCount: image.likes_count,
       prompt: generationTask?.prompt || '',
       createdAt: image.created_at,
+      hasLiked: false,
     }
   })
 
