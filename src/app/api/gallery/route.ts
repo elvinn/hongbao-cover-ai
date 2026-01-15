@@ -14,7 +14,7 @@ const DEFAULT_PAGE_SIZE = PUBLIC_GALLERY_PAGE_SIZE
  * - page: number (default: 1)
  * - pageSize: number (default: 6, max: 50)
  *
- * 返回公开的图片列表（带水印预览图）
+ * 返回公开的图片列表（原图）
  */
 export async function GET(request: NextRequest) {
   try {
@@ -87,11 +87,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 处理图片 URL（使用预览图 CDN URL）
+    // 处理图片 URL（使用原图 CDN URL）
     const processedImages = (images || []).map((image) => {
-      const imageUrl = image.preview_key
-        ? getCdnUrl(image.preview_key, CDN_DOMAIN)
-        : getCdnUrl(image.original_key, CDN_DOMAIN)
+      const imageUrl = image.original_key
+        ? getCdnUrl(image.original_key, CDN_DOMAIN)
+        : getCdnUrl(image.preview_key, CDN_DOMAIN)
 
       // generation_tasks is an array from the join, get the first element
       const generationTask = Array.isArray(image.generation_tasks)

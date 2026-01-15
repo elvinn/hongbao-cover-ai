@@ -83,11 +83,11 @@ export async function fetchPublicGalleryImages(
     throw new Error('获取图片列表失败')
   }
 
-  // Process image URLs
+  // Process image URLs (use original images)
   const processedImages = (images || []).map((image) => {
-    const imageUrl = image.preview_key
-      ? getCdnUrl(image.preview_key, CDN_DOMAIN)
-      : getCdnUrl(image.original_key, CDN_DOMAIN)
+    const imageUrl = image.original_key
+      ? getCdnUrl(image.original_key, CDN_DOMAIN)
+      : getCdnUrl(image.preview_key, CDN_DOMAIN)
 
     // generation_tasks is an array from the join, get the first element
     const generationTask = Array.isArray(image.generation_tasks)
