@@ -9,10 +9,7 @@ import {
   type GallerySortOrder,
   type PublicGalleryImage,
 } from '@/hooks/use-public-gallery'
-import {
-  PUBLIC_GALLERY_PAGE_SIZE,
-  PUBLIC_GALLERY_SSR_BOT_PAGE_SIZE,
-} from '@/config/pagination'
+import { PUBLIC_GALLERY_PAGE_SIZE } from '@/config/pagination'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -24,24 +21,20 @@ interface GalleryContentProps {
   initialImages: PublicGalleryImage[]
   initialTotal: number
   initialHasMore: boolean
-  isSSR: boolean
 }
 
 export function GalleryContent({
   initialImages,
   initialTotal,
   initialHasMore,
-  isSSR,
 }: GalleryContentProps) {
   const [sort, setSort] = useState<GallerySortOrder>('popular')
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const isInCooldownRef = useRef(false)
 
-  // Only provide initial data for SSR mode (bots/crawlers)
-  const hasInitialData = isSSR && initialImages.length > 0
-  const pageSize = isSSR
-    ? PUBLIC_GALLERY_SSR_BOT_PAGE_SIZE
-    : PUBLIC_GALLERY_PAGE_SIZE
+  // 始终使用 SSR 获取的初始数据
+  const hasInitialData = initialImages.length > 0
+  const pageSize = PUBLIC_GALLERY_PAGE_SIZE
 
   const {
     images,
@@ -130,8 +123,8 @@ export function GalleryContent({
   const displayImages = images.length > 0 ? images : initialImages
   const displayTotal = total > 0 ? total : initialTotal
 
-  // Show loading state for CSR mode (non-bot users)
-  const showGlobalLoading = isLoading && !isSSR && displayImages.length === 0
+  // 只在切换排序且没有数据时显示全局加载状态
+  const showGlobalLoading = isLoading && displayImages.length === 0
 
   return (
     <>

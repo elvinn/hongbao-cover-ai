@@ -1,119 +1,66 @@
-'use client'
-
-import { useRouter, useParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { auth } from '@clerk/nextjs/server'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Loader2, Sparkles, User, ChevronLeft } from 'lucide-react'
+import { Sparkles, User } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { RedEnvelopeCover } from '@/components/red-envelope-cover'
 import { LikeButton } from '@/components/like-button'
 import { ShareButton } from '@/components/share-button'
+import { CoverBackButton } from '@/components/cover-back-button'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { fetchCoverDetail } from '@/services/gallery'
 
-interface Creator {
-  nickname: string
-  avatarUrl: string | null
+interface PageProps {
+  params: Promise<{ imageId: string }>
 }
 
-interface CoverDetail {
-  id: string
-  imageUrl: string
-  prompt: string
-  likesCount: number
-  hasLiked: boolean
-  isOwner: boolean
-  createdAt: string
-  creator: Creator
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
-export default function CoverDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const imageId = params.imageId as string
+export default async function CoverDetailPage({ params }: PageProps) {
+  const { imageId } = await params
+  const { userId } = await auth()
 
-  const [cover, setCover] = useState<CoverDetail | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [canGoBack, setCanGoBack] = useState(false)
+  // 在服务端获取封面详情
+  const result = await fetchCoverDetail(imageId, userId)
 
-  useEffect(() => {
-    // Check if there is history to go back to
-    if (typeof window !== 'undefined') {
-      setCanGoBack(window.history.length > 1)
-    }
-  }, [])
-
-  useEffect(() => {
-    async function fetchCoverDetail() {
-      try {
-        const response = await fetch(`/api/cover/${imageId}`)
-        if (!response.ok) {
-          if (response.status === 404) {
-            setError('NOT_FOUND')
-          } else {
-            const data = await response.json()
-            setError(data.message || '加载失败')
-          }
-          return
-        }
-
-        const data = await response.json()
-        setCover(data)
-      } catch (err) {
-        console.error('Failed to fetch cover:', err)
-        setError('加载失败，请稍后重试')
-      } finally {
-        setIsLoading(false)
-      }
+  // Not found or error
+  if (!result.success) {
+    if (result.error === 'NOT_FOUND') {
+      return (
+        <main className="flex min-h-screen flex-col items-center justify-center px-4">
+          <div className="text-center">
+            <h1 className="text-foreground mb-2 text-2xl font-semibold">
+              封面不存在
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              该封面可能已被删除或设为私有
+            </p>
+            <Button asChild className="hb-btn-primary">
+              <Link href="/">
+                <Sparkles className="mr-2 h-4 w-4" />
+                去生成我的封面
+              </Link>
+            </Button>
+          </div>
+        </main>
+      )
     }
 
-    if (imageId) {
-      fetchCoverDetail()
-    }
-  }, [imageId])
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <main className="flex min-h-screen items-center justify-center">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
-      </main>
-    )
-  }
-
-  // Not found
-  if (error === 'NOT_FOUND' || !cover) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center px-4">
-        <div className="text-center">
-          <h1 className="text-foreground mb-2 text-2xl font-semibold">
-            封面不存在
-          </h1>
-          <p className="text-muted-foreground mb-6">
-            该封面可能已被删除或设为私有
-          </p>
-          <Button asChild className="hb-btn-primary">
-            <Link href="/">
-              <Sparkles className="mr-2 h-4 w-4" />
-              去生成我的封面
-            </Link>
-          </Button>
-        </div>
-      </main>
-    )
-  }
-
-  // Error state
-  if (error) {
+    // Server error
     return (
       <main className="flex min-h-screen flex-col items-center justify-center px-4">
         <div className="text-center">
           <h1 className="text-foreground mb-2 text-2xl font-semibold">
             加载失败
           </h1>
-          <p className="text-muted-foreground mb-6">{error}</p>
+          <p className="text-muted-foreground mb-6">{result.message}</p>
           <Button asChild variant="outline">
             <Link href="/">返回首页</Link>
           </Button>
@@ -122,20 +69,14 @@ export default function CoverDetailPage() {
     )
   }
 
+  const cover = result.data
+
   return (
     <main className="relative flex min-h-screen flex-col overflow-hidden">
       <div className="container mx-auto max-w-5xl px-4 py-8 sm:py-12">
         {/* Back Button */}
         <div className="mb-8 flex">
-          <Button
-            onClick={() => (canGoBack ? router.back() : router.push('/'))}
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground -ml-2 gap-1.5 px-3 py-5 text-base transition-all hover:cursor-pointer"
-          >
-            <ChevronLeft className="h-5 w-5" />
-            {canGoBack ? '返回上一页' : '返回首页'}
-          </Button>
+          <CoverBackButton />
         </div>
 
         {/* Main content - responsive layout */}
@@ -150,6 +91,7 @@ export default function CoverDetailPage() {
                 <RedEnvelopeCover
                   imageUrl={cover.imageUrl}
                   className="relative w-full rounded-2xl shadow-2xl transition-transform duration-500 group-hover:scale-[1.01]"
+                  priority
                 />
               </div>
 
@@ -262,12 +204,4 @@ export default function CoverDetailPage() {
       </div>
     </main>
   )
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
 }

@@ -1,27 +1,25 @@
-import { headers } from 'next/headers'
+import { auth } from '@clerk/nextjs/server'
 import { fetchPublicGalleryImages } from '@/services/gallery'
-import { PUBLIC_GALLERY_SSR_BOT_PAGE_SIZE } from '@/config/pagination'
-import { isBot } from '@/utils/bot-detection'
+import { PUBLIC_GALLERY_PAGE_SIZE } from '@/config/pagination'
 import { GalleryContent } from './gallery-content'
 
 export default async function GalleryPage() {
-  // Check if request is from a bot/crawler
-  const headersList = await headers()
-  const userAgent = headersList.get('user-agent')
-  const shouldSSR = isBot(userAgent)
+  // 获取用户登录状态
+  const { userId } = await auth()
+
   const baseUrl = process.env.VERCEL_URL
     ? 'https://hongbao.elvinn.wiki'
     : 'http://localhost:3000'
 
-  // Only fetch data on server for bots (SEO), regular users use CSR
-  const initialData = shouldSSR
-    ? await fetchPublicGalleryImages(
-        'popular',
-        1,
-        PUBLIC_GALLERY_SSR_BOT_PAGE_SIZE,
-      )
-    : null
-  const hasInitialImages = !!initialData?.images?.length
+  // 始终在服务端获取首屏数据（含用户点赞状态）
+  const initialData = await fetchPublicGalleryImages(
+    'popular',
+    1,
+    PUBLIC_GALLERY_PAGE_SIZE,
+    userId,
+  )
+
+  const hasInitialImages = initialData.images.length > 0
   const collectionJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -58,10 +56,9 @@ export default async function GalleryPage() {
       />
       <div className="container mx-auto max-w-5xl px-4 py-8 sm:py-16">
         <GalleryContent
-          initialImages={initialData?.images ?? []}
-          initialTotal={initialData?.total ?? 0}
-          initialHasMore={initialData?.hasMore ?? true}
-          isSSR={shouldSSR}
+          initialImages={initialData.images}
+          initialTotal={initialData.total}
+          initialHasMore={initialData.hasMore}
         />
       </div>
     </main>
