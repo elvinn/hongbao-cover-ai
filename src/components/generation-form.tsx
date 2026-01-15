@@ -25,6 +25,7 @@ interface GenerationFormProps {
   descriptionRef?: React.RefObject<HTMLTextAreaElement | null>
   isPremium?: boolean
   onCreditsExhausted?: () => void
+  resetSignal?: number
 }
 
 export function GenerationForm({
@@ -39,6 +40,7 @@ export function GenerationForm({
   descriptionRef,
   isPremium = false,
   onCreditsExhausted,
+  resetSignal,
 }: GenerationFormProps) {
   const { isSignedIn, isLoaded: isAuthLoaded } = useAuth()
   const { redirectToSignIn } = useClerk()
@@ -63,6 +65,9 @@ export function GenerationForm({
     return initialPrompt.length
   })
   const [hasTouched, setHasTouched] = useState(false)
+  const [prevSavedDescription, setPrevSavedDescription] = useState(
+    savedInput?.description,
+  )
 
   // 清除已使用的缓存（只在挂载时执行）
   const hasClearedCacheRef = useRef(false)
@@ -73,18 +78,43 @@ export function GenerationForm({
     }
   }, [])
 
+  // 当 savedInput 变化时同步状态（React 推荐的模式：在渲染期间更新状态）
+  if (
+    !hasTouched &&
+    savedInput?.description &&
+    savedInput.description !== prevSavedDescription
+  ) {
+    setPrevSavedDescription(savedInput.description)
+    setDescription(savedInput.description)
+    setSelectedStyle(savedInput.style)
+    setCharCount(savedInput.description.length)
+  }
+
+  useEffect(() => {
+    if (resetSignal === undefined) return
+    const timeout = window.setTimeout(() => {
+      setDescription('')
+      setCharCount(0)
+      setHasTouched(false)
+      setError(null)
+      clearCachedPrompt()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timeout)
+    }
+  }, [resetSignal])
+
   const handleDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value
       setDescription(value)
       setCharCount(value.length)
       setHasTouched(true)
-      if (isSignedIn) {
-        saveInput(value, selectedStyle)
-      }
+      saveInput(value, selectedStyle)
       setError(null)
     },
-    [selectedStyle, saveInput, isSignedIn],
+    [selectedStyle, saveInput],
   )
 
   const handleGenerate = useCallback(() => {

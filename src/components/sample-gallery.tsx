@@ -1,14 +1,25 @@
+import { memo } from 'react'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
-import { SAMPLE_COVERS } from '@/types/hongbao'
-import { COVER_IMAGE_WIDTH, COVER_IMAGE_HEIGHT } from '@/utils/prompts'
 import { RedEnvelopeCover } from '@/components/red-envelope-cover'
+import { CURATED_GALLERY } from '@/config/curated-gallery'
+import { SAMPLE_COVERS } from '@/types/hongbao'
+import { COVER_IMAGE_HEIGHT, COVER_IMAGE_WIDTH } from '@/utils/prompts'
 
-export function SampleGallery() {
-  const samples = SAMPLE_COVERS.slice(0, 6).map((cover) => ({
-    ...cover,
-    imageUrl: `https://picsum.photos/seed/${cover.id}/${COVER_IMAGE_WIDTH}/${COVER_IMAGE_HEIGHT}`,
-  }))
+interface GalleryItem {
+  imageUrl: string
+  imageId?: string
+}
+
+function SampleGalleryComponent() {
+  const curatedSamples: GalleryItem[] = CURATED_GALLERY.slice(0, 6)
+  const fallbackSamples: GalleryItem[] = SAMPLE_COVERS.slice(0, 6).map(
+    (cover) => ({
+      imageId: cover.id,
+      imageUrl: `https://picsum.photos/seed/${cover.id}/${COVER_IMAGE_WIDTH}/${COVER_IMAGE_HEIGHT}`,
+    }),
+  )
+  const samples = curatedSamples.length > 0 ? curatedSamples : fallbackSamples
 
   return (
     <div className="space-y-6">
@@ -33,11 +44,23 @@ export function SampleGallery() {
       <div className="scrollbar-hide -mx-4 flex overflow-x-auto pb-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-6 sm:overflow-visible sm:pb-0">
         <div className="flex flex-nowrap gap-4 px-4 sm:contents sm:gap-0 sm:px-0">
           {samples.map((sample) => (
-            <div key={sample.id} className="w-[140px] shrink-0 sm:w-auto">
-              <RedEnvelopeCover
-                imageUrl={sample.imageUrl}
-                className="w-full transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 sm:hover:-translate-y-2"
-              />
+            <div
+              key={sample.imageId ?? sample.imageUrl}
+              className="w-[140px] shrink-0 sm:w-auto"
+            >
+              {sample.imageId ? (
+                <Link href={`/cover/${sample.imageId}`} aria-label="查看封面">
+                  <RedEnvelopeCover
+                    imageUrl={sample.imageUrl}
+                    className="w-full transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 sm:hover:-translate-y-2"
+                  />
+                </Link>
+              ) : (
+                <RedEnvelopeCover
+                  imageUrl={sample.imageUrl}
+                  className="w-full transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 sm:hover:-translate-y-2"
+                />
+              )}
             </div>
           ))}
         </div>
@@ -45,3 +68,6 @@ export function SampleGallery() {
     </div>
   )
 }
+
+export const SampleGallery = memo(SampleGalleryComponent)
+SampleGallery.displayName = 'SampleGallery'

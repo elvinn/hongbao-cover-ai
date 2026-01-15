@@ -133,7 +133,7 @@ export function GalleryCard({ image }: GalleryCardProps) {
             ) : (
               <Lock className="h-3 w-3" />
             )}
-            {isPublic ? '公开' : '私有'}
+            {isPublic ? '公开' : '私密'}
           </div>
         </div>
 
@@ -194,7 +194,7 @@ export function GalleryCard({ image }: GalleryCardProps) {
                 : copied
                   ? '已公开并复制链接'
                   : isPublic
-                    ? '设为私有'
+                    ? '设为私密'
                     : '公开到广场'}
             </span>
           </button>

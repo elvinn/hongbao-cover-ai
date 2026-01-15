@@ -246,6 +246,7 @@ export async function POST(request: NextRequest) {
           user_id: userId,
           preview_key: previewKeyToStore,
           original_key: originalKey,
+          is_public: true,
         })
         .select('id')
         .single()

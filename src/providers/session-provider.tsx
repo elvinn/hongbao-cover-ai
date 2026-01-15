@@ -51,6 +51,7 @@ interface SessionContextType {
   refreshUserData: () => Promise<void>
   markAsPaid: (creditsToAdd?: number) => Promise<void>
   saveInput: (description: string, style: CoverStyle) => void
+  clearInput: () => void
 }
 
 const SessionContext = createContext<SessionContextType | null>(null)
@@ -219,6 +220,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const clearInput = useCallback(() => {
+    setSavedInput(null)
+    try {
+      localStorage.removeItem(INPUT_STORAGE_KEY)
+    } catch {
+      // ignore
+    }
+  }, [])
+
   return (
     <SessionContext.Provider
       value={{
@@ -235,6 +245,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         refreshUserData,
         markAsPaid,
         saveInput,
+        clearInput,
       }}
     >
       {children}

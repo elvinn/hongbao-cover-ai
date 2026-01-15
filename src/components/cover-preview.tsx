@@ -7,6 +7,7 @@ import { RedEnvelopeCover } from '@/components/red-envelope-cover'
 interface CoverPreviewProps {
   imageUrl?: string | null
   isLoading?: boolean
+  loadingProgress?: number
   error?: string | null
   onDownload?: () => void
 }
@@ -14,13 +15,17 @@ interface CoverPreviewProps {
 export function CoverPreview({
   imageUrl,
   isLoading = false,
+  loadingProgress = 0,
   error,
   onDownload,
 }: CoverPreviewProps) {
   if (isLoading) {
     return (
-      <div className="bg-muted flex aspect-3/4 w-[300px] animate-pulse items-center justify-center rounded-lg">
-        <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+      <div className="bg-muted flex aspect-3/4 w-[300px] flex-col items-center justify-center gap-3 rounded-lg">
+        <span className="text-muted-foreground text-sm font-normal">
+          {Math.min(97, Math.max(0, Math.floor(loadingProgress)))}%
+        </span>
+        <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
       </div>
     )
   }

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { ChevronDown, ImageIcon, Loader2, Sparkles } from 'lucide-react'
 import { PublicGalleryCard } from '@/components/public-gallery-card'
-import { GallerySkeleton } from '@/components/gallery-skeleton'
 import {
   usePublicGallery,
   type GallerySortOrder,
@@ -103,7 +102,7 @@ export function GalleryContent({
   const displayTotal = total > 0 ? total : initialTotal
 
   // Show loading state for CSR mode (non-bot users)
-  const showSkeleton = isLoading && !isSSR
+  const showGlobalLoading = isLoading && !isSSR && displayImages.length === 0
 
   return (
     <>
@@ -115,7 +114,7 @@ export function GalleryContent({
               <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
                 封面广场
               </h1>
-              {!showSkeleton && (
+              {!showGlobalLoading && (
                 <Badge
                   variant="secondary"
                   className="border-red-100 bg-red-50 px-2 py-0.5 text-xs font-bold text-red-600 hover:bg-red-50"
@@ -140,11 +139,15 @@ export function GalleryContent({
         </div>
       </header>
 
-      {/* Loading Skeleton for CSR mode */}
-      {showSkeleton && <GallerySkeleton />}
+      {/* Global Loading for CSR mode */}
+      {showGlobalLoading && (
+        <div className="flex min-h-[45vh] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+        </div>
+      )}
 
       {/* Empty State */}
-      {displayImages.length === 0 && !isLoading && !showSkeleton && (
+      {displayImages.length === 0 && !isLoading && !showGlobalLoading && (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white/50 px-6 py-20 text-center backdrop-blur-sm">
           <div className="mb-6 rounded-2xl bg-red-50 p-4 ring-8 ring-red-50/50">
             <ImageIcon className="h-12 w-12 text-red-400" />
@@ -169,7 +172,7 @@ export function GalleryContent({
       )}
 
       {/* Gallery Grid */}
-      {displayImages.length > 0 && !showSkeleton && (
+      {displayImages.length > 0 && !showGlobalLoading && (
         <>
           <div className="grid grid-cols-2 gap-4 sm:gap-8 md:grid-cols-3 lg:grid-cols-4">
             {displayImages.map((image) => (

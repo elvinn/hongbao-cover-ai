@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import {
   Sparkles,
@@ -31,6 +32,7 @@ export default function Home() {
     isLoading: isSessionLoading,
     isAuthenticated,
     refreshUserData,
+    clearInput,
   } = useSession()
   const {
     create,
@@ -46,19 +48,25 @@ export default function Home() {
 
   const [generationError, setGenerationError] = useState<string | null>(null)
   const [showCreditsModal, setShowCreditsModal] = useState(false)
-  const coverPreviewRef = useRef<HTMLDivElement>(null)
+  const [formResetSignal, setFormResetSignal] = useState(0)
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const [showResultHighlight, setShowResultHighlight] = useState(false)
+  const coverTitleRef = useRef<HTMLHeadingElement>(null)
   const processedTaskIdRef = useRef<string | null>(null)
+  const highlightTimeoutRef = useRef<number | null>(null)
+  const hasScrolledToLoadingRef = useRef(false)
 
   const scrollToCoverPreview = useCallback(() => {
-    coverPreviewRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
+    const target = coverTitleRef.current
+    if (!target) return
+    const top = target.getBoundingClientRect().top + window.scrollY - 128
+    window.scrollTo({ top, behavior: 'smooth' })
   }, [])
 
   const handleGenerate = useCallback(
     (description: string) => {
       setGenerationError(null)
+      setShowResultHighlight(false)
       reset()
       create(description)
     },
@@ -70,8 +78,18 @@ export default function Home() {
     // Just refresh user data to update the display
     await refreshUserData()
     setGenerationError(null)
+    clearInput()
+    setFormResetSignal((prev) => prev + 1)
+    setShowResultHighlight(true)
+    if (highlightTimeoutRef.current) {
+      window.clearTimeout(highlightTimeoutRef.current)
+    }
+    highlightTimeoutRef.current = window.setTimeout(() => {
+      setShowResultHighlight(false)
+      highlightTimeoutRef.current = null
+    }, 1600)
     setTimeout(scrollToCoverPreview, 100)
-  }, [refreshUserData, scrollToCoverPreview])
+  }, [clearInput, refreshUserData, scrollToCoverPreview])
 
   useEffect(() => {
     if (
@@ -94,6 +112,39 @@ export default function Home() {
   const showCoverPreview = status === 'SUCCEEDED' && imageUrl
   const isLoadingCover =
     status === 'PENDING' || status === 'PROCESSING' || isLoading || isPolling
+
+  useEffect(() => {
+    if (isLoadingCover && !hasScrolledToLoadingRef.current) {
+      hasScrolledToLoadingRef.current = true
+      setTimeout(scrollToCoverPreview, 100)
+    }
+
+    if (!isLoadingCover) {
+      hasScrolledToLoadingRef.current = false
+    }
+  }, [isLoadingCover, scrollToCoverPreview])
+
+  useEffect(() => {
+    if (!isLoadingCover) {
+      const timeout = window.setTimeout(() => {
+        setLoadingProgress(0)
+      }, 0)
+      return () => {
+        window.clearTimeout(timeout)
+      }
+    }
+
+    const startTime = Date.now()
+    const interval = window.setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const nextProgress = Math.min(97, Math.floor((elapsed / 10000) * 100))
+      setLoadingProgress(nextProgress)
+    }, 800)
+
+    return () => {
+      window.clearInterval(interval)
+    }
+  }, [isLoadingCover])
 
   const handleDownload = useCallback(() => {
     if (imageUrl) {
@@ -151,6 +202,7 @@ export default function Home() {
               isSessionLoading={isSessionLoading}
               isPremium={isPremium}
               onCreditsExhausted={handleCreditsExhausted}
+              resetSignal={formResetSignal}
             />
 
             {displayError && (
@@ -184,17 +236,18 @@ export default function Home() {
               )}
           </div>
 
-          <div className="animate-in fade-in slide-in-from-bottom-4 delay-200 duration-700">
-            <SampleGallery />
-          </div>
-
           {showCoverPreview && (
             <div
-              ref={coverPreviewRef}
-              className="hb-card animate-in fade-in slide-in-from-bottom-4 p-6 duration-500 sm:p-8"
+              className={cn(
+                'hb-card animate-in fade-in slide-in-from-bottom-4 p-6 duration-500 sm:p-8',
+                showResultHighlight &&
+                  'ring-primary/30 shadow-primary/20 shadow-2xl ring-2',
+              )}
             >
               <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold">生成结果</h2>
+                <h2 ref={coverTitleRef} className="text-xl font-semibold">
+                  生成结果
+                </h2>
                 <div className="flex gap-2">
                   <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
                     AI 已完成
@@ -244,24 +297,25 @@ export default function Home() {
           )}
 
           {isLoadingCover && (
-            <div ref={coverPreviewRef} className="hb-card p-6 sm:p-8">
+            <div className="hb-card p-6 sm:p-8">
               <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold">正在生成...</h2>
+                <h2 ref={coverTitleRef} className="text-xl font-semibold">
+                  正在生成...
+                </h2>
                 <Loader2 className="text-primary h-5 w-5 animate-spin" />
               </div>
               <div className="flex flex-col items-center space-y-6">
-                <CoverPreview isLoading={true} />
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="h-1.5 w-48 overflow-hidden rounded-full bg-red-100">
-                    <div className="animate-progress bg-primary h-full w-full origin-left" />
-                  </div>
-                  <p className="text-muted-foreground animate-pulse text-sm">
-                    正在由 AI 创作精美封面，请稍候...
-                  </p>
-                </div>
+                <CoverPreview
+                  isLoading={true}
+                  loadingProgress={loadingProgress}
+                />
               </div>
             </div>
           )}
+
+          <div className="animate-in fade-in slide-in-from-bottom-4 delay-200 duration-700">
+            <SampleGallery />
+          </div>
         </div>
       </div>
 
@@ -375,17 +429,23 @@ export default function Home() {
                 {/* Red Envelope Body */}
                 <div className="relative aspect-4/7 overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5">
                   {/* Base Cover Image */}
-                  <img
+                  <Image
                     src="https://cdn.hongbao.elvinn.wiki/public/official.jpg"
-                    className="absolute inset-0 h-full w-full object-cover"
                     alt="红包封面预览"
+                    fill
+                    sizes="(max-width: 640px) 12rem, 14rem"
+                    className="absolute inset-0 h-full w-full object-cover"
+                    unoptimized
                   />
 
                   {/* Bottom Flap Overlay (containing the 'Open' button style) */}
-                  <img
+                  <Image
                     src="https://cdn.hongbao.elvinn.wiki/public/official-bottom.png"
-                    className="absolute bottom-0 left-0 w-full object-contain"
                     alt="红包底部"
+                    fill
+                    sizes="(max-width: 640px) 12rem, 14rem"
+                    className="absolute bottom-0 left-0 w-full object-contain object-bottom"
+                    unoptimized
                   />
 
                   {/* Glass Reflection Effect */}
