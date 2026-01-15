@@ -4,7 +4,9 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Download, Globe, Lock, Loader2, Calendar, Check } from 'lucide-react'
 import { RedEnvelopeCover } from '@/components/red-envelope-cover'
+import { copyToClipboard } from '@/utils/clipboard'
 import { downloadCoverByUrl } from '@/utils/download'
+import { getShareText } from '@/utils/share'
 import { cn } from '@/utils/tailwind'
 import type { GalleryImage } from '@/hooks/use-my-gallery'
 
@@ -46,19 +48,11 @@ export function GalleryCard({ image }: GalleryCardProps) {
     setIsExpanded((prev) => !prev)
   }, [])
 
-  const copyToClipboard = useCallback(async () => {
-    const SITE_URL =
-      process.env.NEXT_PUBLIC_SITE_URL || 'https://hongbao.elvinn.wiki'
-    const shareUrl = `${SITE_URL}/cover/${image.id}`
-    const shareText = `🧧 AI 生成了一个超好看的红包封面！\n快来看看 → ${shareUrl}\n你也可以免费生成属于自己的红包封面~`
-
-    try {
-      await navigator.clipboard.writeText(shareText)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
-      console.error('Failed to copy:', error)
-    }
+  const handleCopyShare = useCallback(async () => {
+    const shareText = getShareText(image.id)
+    await copyToClipboard(shareText)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }, [image.id])
 
   const togglePublic = useCallback(
@@ -89,7 +83,7 @@ export function GalleryCard({ image }: GalleryCardProps) {
 
         // If just published to public, copy to clipboard
         if (newValue) {
-          copyToClipboard()
+          handleCopyShare()
         }
       } catch (error) {
         console.error('Failed to update public status:', error)
@@ -99,7 +93,7 @@ export function GalleryCard({ image }: GalleryCardProps) {
         setIsUpdating(false)
       }
     },
-    [image.id, isPublic, isUpdating, copyToClipboard],
+    [image.id, isPublic, isUpdating, handleCopyShare],
   )
 
   return (

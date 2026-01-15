@@ -4,6 +4,8 @@ import { useCallback } from 'react'
 import { Share, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { copyToClipboard } from '@/utils/clipboard'
+import { getShareText } from '@/utils/share'
 import { cn } from '@/utils/tailwind'
 
 interface ShareButtonProps {
@@ -13,9 +15,6 @@ interface ShareButtonProps {
   size?: 'sm' | 'default'
 }
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || 'https://hongbao.elvinn.wiki'
-
 export function ShareButton({
   imageId,
   className,
@@ -23,29 +22,11 @@ export function ShareButton({
   size = 'default',
 }: ShareButtonProps) {
   const handleShare = useCallback(async () => {
-    const shareUrl = `${SITE_URL}/cover/${imageId}`
-    const shareText = `🧧 AI 生成了一个超好看的红包封面！
-快来看看 → ${shareUrl}
-你也可以免费生成属于自己的红包封面~`
-
-    try {
-      await navigator.clipboard.writeText(shareText)
-      toast.success('已复制，快去分享吧！', {
-        icon: <Check className="h-4 w-4" />,
-      })
-    } catch (error) {
-      console.error('Failed to copy:', error)
-      // Fallback for older browsers
-      const textarea = document.createElement('textarea')
-      textarea.value = shareText
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textarea)
-      toast.success('已复制，快去分享吧！', {
-        icon: <Check className="h-4 w-4" />,
-      })
-    }
+    const shareText = getShareText(imageId)
+    await copyToClipboard(shareText)
+    toast.success('已复制，快去分享吧！', {
+      icon: <Check className="h-4 w-4" />,
+    })
   }, [imageId])
 
   // Minimal variant - 用于卡片等紧凑场景

@@ -12,9 +12,7 @@ export async function generateMetadata({
   params: Promise<{ imageId: string }>
 }): Promise<Metadata> {
   const { imageId } = await params
-  const baseUrl = process.env.VERCEL_URL
-    ? 'https://hongbao.elvinn.wiki'
-    : 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
   // 获取封面详情用于生成 metadata（不需要用户 ID）
   const result = await fetchCoverDetail(imageId)

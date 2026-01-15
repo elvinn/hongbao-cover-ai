@@ -7,9 +7,7 @@ export default async function GalleryPage() {
   // 获取用户登录状态
   const { userId } = await auth()
 
-  const baseUrl = process.env.VERCEL_URL
-    ? 'https://hongbao.elvinn.wiki'
-    : 'http://localhost:3000'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
   // 始终在服务端获取首屏数据（含用户点赞状态）
   const initialData = await fetchPublicGalleryImages(

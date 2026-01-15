@@ -13,9 +13,7 @@ import { SessionProvider } from '@/providers/session-provider'
 import { SiteHeader } from '@/components/site-header'
 import { SiteFooter } from '@/components/site-footer'
 
-const defaultUrl = process.env.VERCEL_URL
-  ? 'https://hongbao.elvinn.wiki'
-  : 'http://localhost:3000'
+const defaultUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 export const metadata: Metadata = {
   metadataBase: new URL(defaultUrl),
@@ -98,7 +96,7 @@ const jsonLd = {
   name: '红包封面 AI',
   description:
     '红包封面 AI 助你让祝福更有“面”。输入一句话描述，即可生成 2026 马年专属微信红包封面。支持春节、生日等多场景定制，尺寸符合官方规范，分享更有仪式感。',
-  url: 'https://hongbao.elvinn.wiki',
+  url: defaultUrl,
   applicationCategory: 'DesignApplication',
   operatingSystem: 'Web',
   offers: {
