@@ -15,8 +15,6 @@ import {
 } from '@/utils/image-processor'
 import { uploadToR2, getOriginalKey, getPreviewKey } from '@/utils/r2-storage'
 
-const CDN_DOMAIN = process.env.R2_CDN_DOMAIN || ''
-
 /**
  * 后台异步上传图片到 R2
  * 此函数在响应返回后继续执行，不阻塞用户

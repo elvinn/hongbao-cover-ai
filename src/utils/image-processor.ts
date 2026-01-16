@@ -1,3 +1,4 @@
+import path from 'path'
 import sharp from 'sharp'
 import { COVER_IMAGE_WIDTH, COVER_IMAGE_HEIGHT } from '@/utils/prompts'
 
@@ -13,9 +14,39 @@ export async function downloadImage(url: string): Promise<Buffer> {
   return Buffer.from(arrayBuffer)
 }
 
+// Watermark cache: original buffer and resized buffers by width
+let watermarkOriginal: Buffer | null = null
+const watermarkResizedCache = new Map<number, Buffer>()
+
 /**
- * Add watermark text to an image
- * Uses Sharp's composite feature to overlay SVG text watermark
+ * Load and cache the original watermark buffer
+ */
+async function getWatermarkOriginal(): Promise<Buffer> {
+  if (!watermarkOriginal) {
+    const watermarkPath = path.join(process.cwd(), 'src/utils/watermark.png')
+    watermarkOriginal = await sharp(watermarkPath).toBuffer()
+  }
+  return watermarkOriginal
+}
+
+/**
+ * Get resized watermark buffer (cached by width)
+ */
+async function getResizedWatermark(width: number): Promise<Buffer> {
+  const cached = watermarkResizedCache.get(width)
+  if (cached) {
+    return cached
+  }
+
+  const original = await getWatermarkOriginal()
+  const resized = await sharp(original).resize(width).toBuffer()
+  watermarkResizedCache.set(width, resized)
+  return resized
+}
+
+/**
+ * Add watermark image to an image
+ * Uses Sharp's composite feature to overlay PNG watermark at top-right corner
  * @param imageBuffer - The original image buffer
  * @param scale - Scale factor for the output image (default: 1, use 0.5 for half size)
  * @returns Buffer with watermark added
@@ -30,35 +61,21 @@ export async function addWatermark(
   const originalWidth = metadata.width || COVER_IMAGE_WIDTH
   const originalHeight = metadata.height || COVER_IMAGE_HEIGHT
 
-  // Calculate target dimensions
   const targetWidth = Math.round(originalWidth * scale)
   const targetHeight = Math.round(originalHeight * scale)
 
-  // Watermark configuration based on target size
-  const fontSize = Math.round(targetWidth * 0.05)
-  const text = 'Hongbao AI'
-  const padding = Math.round(targetWidth * 0.04)
-  const strokeWidth = Math.max(2, Math.round(fontSize / 20)) // Stroke width relative to font size
+  // Calculate watermark size (width is 25% of target image)
+  const watermarkWidth = Math.round(targetWidth * 0.25)
+  const watermarkBuffer = await getResizedWatermark(watermarkWidth)
 
-  // Create SVG watermark - positioned at top-right
+  // Get resized watermark dimensions
+  const watermarkMeta = await sharp(watermarkBuffer).metadata()
+  const wmWidth = watermarkMeta.width || watermarkWidth
 
-  const svgWatermark = `
-    <svg width="${targetWidth}" height="${targetHeight}">
-      <text
-        x="${targetWidth - padding}"
-        y="${padding + fontSize}"
-        text-anchor="end"
-        font-size="${fontSize}"
-        font-family="DejaVu Sans, Liberation Sans, sans-serif"
-        font-weight="bold"
-        fill="white"
-        fill-opacity="0.8"
-        stroke="black"
-        stroke-width="${strokeWidth}"
-        stroke-opacity="0.5"
-      >${text}</text>
-    </svg>
-  `
+  // Calculate top-right position with padding
+  const padding = Math.round(targetWidth * 0.03)
+  const left = targetWidth - wmWidth - padding
+  const top = padding
 
   let processedImage = image
 
@@ -70,19 +87,16 @@ export async function addWatermark(
     })
   }
 
-  // TODO: 临时禁用水印，Vercel 环境缺少字体导致显示方块
-  // return processedImage
-  //   .composite([
-  //     {
-  //       input: Buffer.from(svgWatermark),
-  //       top: 0,
-  //       left: 0,
-  //     },
-  //   ])
-  //   .png({ quality: 80 })
-  //   .toBuffer()
-
-  return processedImage.png({ quality: 80 }).toBuffer()
+  return processedImage
+    .composite([
+      {
+        input: watermarkBuffer,
+        top: top,
+        left: left,
+      },
+    ])
+    .png({ quality: 80 })
+    .toBuffer()
 }
 
 /**
