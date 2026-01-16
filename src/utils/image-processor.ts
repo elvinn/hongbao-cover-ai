@@ -41,6 +41,7 @@ export async function addWatermark(
   const strokeWidth = Math.max(2, Math.round(fontSize / 20)) // Stroke width relative to font size
 
   // Create SVG watermark - positioned at top-right
+
   const svgWatermark = `
     <svg width="${targetWidth}" height="${targetHeight}">
       <text
@@ -69,16 +70,19 @@ export async function addWatermark(
     })
   }
 
-  return processedImage
-    .composite([
-      {
-        input: Buffer.from(svgWatermark),
-        top: 0,
-        left: 0,
-      },
-    ])
-    .png({ quality: 80 })
-    .toBuffer()
+  // TODO: 临时禁用水印，Vercel 环境缺少字体导致显示方块
+  // return processedImage
+  //   .composite([
+  //     {
+  //       input: Buffer.from(svgWatermark),
+  //       top: 0,
+  //       left: 0,
+  //     },
+  //   ])
+  //   .png({ quality: 80 })
+  //   .toBuffer()
+
+  return processedImage.png({ quality: 80 }).toBuffer()
 }
 
 /**
