@@ -48,7 +48,7 @@ export async function addWatermark(
         y="${padding + fontSize}"
         text-anchor="end"
         font-size="${fontSize}"
-        font-family="Arial, sans-serif"
+        font-family="DejaVu Sans, Liberation Sans, sans-serif"
         font-weight="bold"
         fill="white"
         fill-opacity="0.8"
