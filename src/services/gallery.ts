@@ -263,10 +263,10 @@ export async function fetchCoverDetail(
       // 获取用户信息失败，使用默认值
     }
 
-    // 返回预览图 URL（带水印，优化后）
-    const rawUrl = image.preview_key
-      ? getCdnUrl(image.preview_key, CDN_DOMAIN)
-      : getCdnUrl(image.original_key, CDN_DOMAIN)
+    // 返回原图 URL（优化后）
+    const rawUrl = image.original_key
+      ? getCdnUrl(image.original_key, CDN_DOMAIN)
+      : getCdnUrl(image.preview_key, CDN_DOMAIN)
     const imageUrl = getOptimizedImageUrl(rawUrl)
 
     // generation_tasks is an array from the join, get the first element
