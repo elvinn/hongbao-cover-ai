@@ -14,14 +14,21 @@ import {
 
 // Volcano Engine Ark API configuration
 const ARK_API_BASE = 'https://ark.cn-beijing.volces.com/api/v3'
-const SEEDDREAM_MODEL = 'doubao-seedream-4-0-250828'
+const DEFAULT_SEEDDREAM_MODEL = 'doubao-seedream-4-0-250828'
+
+/**
+ * Get the Seeddream model name from environment variable or use default
+ */
+function getSeeddreamModel(): string {
+  return process.env.SEEDDREAM_MODEL || DEFAULT_SEEDDREAM_MODEL
+}
 
 // Format size for OpenAI API: "widthxheight" (e.g., "957x1278")
 const IMAGE_SIZE = `${COVER_IMAGE_WIDTH}x${COVER_IMAGE_HEIGHT}` as const
 
 /**
  * Volcano Engine Seeddream provider for image generation
- * Uses OpenAI SDK compatible API with doubao-seedream-4-0-250828 model
+ * Uses OpenAI SDK compatible API with configurable model (env: SEEDDREAM_MODEL)
  * This is a synchronous provider - images are generated immediately
  */
 export class SeeddreamProvider implements ImageGenerationProvider {
@@ -46,16 +53,17 @@ export class SeeddreamProvider implements ImageGenerationProvider {
 
     try {
       const fullPrompt = buildFullPrompt(prompt)
+      const model = getSeeddreamModel()
 
       console.log('[Seeddream Provider] 用户提示词:', prompt)
       console.log('[Seeddream Provider] 完整提示词:', fullPrompt)
-      console.log('[Seeddream Provider] 模型名称:', SEEDDREAM_MODEL)
+      console.log('[Seeddream Provider] 模型名称:', model)
       console.log('[Seeddream Provider] 图片尺寸:', IMAGE_SIZE)
 
       // Call Volcano Engine API using OpenAI SDK
       // Note: size is a Volcano Engine specific parameter that accepts custom dimensions
       const response = await this.client.images.generate({
-        model: SEEDDREAM_MODEL,
+        model,
         prompt: fullPrompt,
         // @ts-expect-error - size accepts custom dimensions on Volcano Engine API (957x1278)
         size: IMAGE_SIZE,

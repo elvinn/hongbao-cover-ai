@@ -1,8 +1,7 @@
 import { getImageGenerationSystemPrompt } from '@/utils/env'
 
 /**
- * 红包封面图片尺寸常量
- * 微信官方规范尺寸：957×1278 像素
+ * 红包封面图片尺寸常量，符合微信官方规范尺寸
  */
 export const COVER_IMAGE_WIDTH = 957
 export const COVER_IMAGE_HEIGHT = 1278

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
     // 获取基础 URL
     const origin =
       request.headers.get('origin') ||
-      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
       'http://localhost:3000'
 
     // 创建 Checkout Session
