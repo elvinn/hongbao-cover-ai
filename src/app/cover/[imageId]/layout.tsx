@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { fetchCoverDetail } from '@/services/gallery'
+import { fetchCoverMetadata } from '@/services/gallery'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -14,8 +14,8 @@ export async function generateMetadata({
   const { imageId } = await params
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
-  // 获取封面详情用于生成 metadata（不需要用户 ID）
-  const result = await fetchCoverDetail(imageId)
+  // 获取封面元数据（轻量版，只获取 SEO 需要的数据）
+  const result = await fetchCoverMetadata(imageId)
 
   // 如果封面不存在，返回默认 metadata
   if (!result.success) {

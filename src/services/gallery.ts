@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { clerkClient } from '@clerk/nextjs/server'
 import { createServiceRoleClient } from '@/supabase/server'
 import { getCdnUrl } from '@/utils/r2-storage'
@@ -170,31 +171,122 @@ export type FetchCoverDetailResult =
   | { success: false; error: 'NOT_FOUND' | 'SERVER_ERROR'; message: string }
 
 /**
+ * 封面元数据接口（轻量版，仅用于 SEO metadata）
+ */
+export interface CoverMetadata {
+  imageUrl: string
+  prompt: string
+}
+
+export type FetchCoverMetadataResult =
+  | { success: true; data: CoverMetadata }
+  | { success: false; error: 'NOT_FOUND' | 'SERVER_ERROR'; message: string }
+
+/**
+ * Fetch cover metadata (lightweight, for SEO only)
+ * 只获取 metadata 需要的数据，跳过 Clerk API、点赞状态、导航等昂贵操作
+ *
+ * @param imageId - 图片 ID
+ */
+export const fetchCoverMetadata = cache(
+  async (imageId: string): Promise<FetchCoverMetadataResult> => {
+    try {
+      if (!imageId) {
+        return {
+          success: false,
+          error: 'NOT_FOUND',
+          message: '请提供有效的图片 ID',
+        }
+      }
+
+      const supabase = createServiceRoleClient()
+
+      const { data: image, error: imageError } = await supabase
+        .from('images')
+        .select(
+          `
+          preview_key,
+          original_key,
+          is_public,
+          generation_tasks (
+            prompt
+          )
+        `,
+        )
+        .eq('id', imageId)
+        .single()
+
+      if (imageError || !image) {
+        return {
+          success: false,
+          error: 'NOT_FOUND',
+          message: '封面不存在',
+        }
+      }
+
+      if (!image.is_public) {
+        return {
+          success: false,
+          error: 'NOT_FOUND',
+          message: '封面不存在或未公开',
+        }
+      }
+
+      const rawUrl = image.original_key
+        ? getCdnUrl(image.original_key, CDN_DOMAIN)
+        : getCdnUrl(image.preview_key, CDN_DOMAIN)
+      const imageUrl = getOptimizedImageUrl(rawUrl)
+
+      const generationTask = Array.isArray(image.generation_tasks)
+        ? image.generation_tasks[0]
+        : image.generation_tasks
+
+      return {
+        success: true,
+        data: {
+          imageUrl,
+          prompt: generationTask?.prompt || '',
+        },
+      }
+    } catch (error) {
+      console.error('Get cover metadata error:', error)
+      return {
+        success: false,
+        error: 'SERVER_ERROR',
+        message: '获取封面信息失败',
+      }
+    }
+  },
+)
+
+/**
  * Fetch cover detail (server-side)
+ * 完整版，包含用户相关数据和导航
  *
  * @param imageId - 图片 ID
  * @param userId - 用户 ID（可选，用于查询点赞状态和判断是否为所有者）
  */
-export async function fetchCoverDetail(
-  imageId: string,
-  userId?: string | null,
-): Promise<FetchCoverDetailResult> {
-  try {
-    if (!imageId) {
-      return {
-        success: false,
-        error: 'NOT_FOUND',
-        message: '请提供有效的图片 ID',
+export const fetchCoverDetail = cache(
+  async (
+    imageId: string,
+    userId?: string | null,
+  ): Promise<FetchCoverDetailResult> => {
+    try {
+      if (!imageId) {
+        return {
+          success: false,
+          error: 'NOT_FOUND',
+          message: '请提供有效的图片 ID',
+        }
       }
-    }
 
-    const supabase = createServiceRoleClient()
+      const supabase = createServiceRoleClient()
 
-    // 获取图片详情（包含生成任务信息）
-    const { data: image, error: imageError } = await supabase
-      .from('images')
-      .select(
-        `
+      // 获取图片详情（包含生成任务信息）
+      const { data: image, error: imageError } = await supabase
+        .from('images')
+        .select(
+          `
         id,
         preview_key,
         original_key,
@@ -206,154 +298,140 @@ export async function fetchCoverDetail(
           prompt
         )
       `,
-      )
-      .eq('id', imageId)
-      .single()
-
-    if (imageError || !image) {
-      return {
-        success: false,
-        error: 'NOT_FOUND',
-        message: '封面不存在',
-      }
-    }
-
-    // 检查是否公开（或者是用户自己的图片）
-    const isOwner = !!(userId && image.user_id === userId)
-
-    if (!image.is_public && !isOwner) {
-      return {
-        success: false,
-        error: 'NOT_FOUND',
-        message: '封面不存在或未公开',
-      }
-    }
-
-    // 检查当前用户是否已点赞
-    let hasLiked = false
-    if (userId) {
-      const { data: likeData } = await supabase
-        .from('image_likes')
-        .select('id')
-        .eq('image_id', imageId)
-        .eq('user_id', userId)
+        )
+        .eq('id', imageId)
         .single()
 
-      hasLiked = !!likeData
-    }
+      if (imageError || !image) {
+        return {
+          success: false,
+          error: 'NOT_FOUND',
+          message: '封面不存在',
+        }
+      }
 
-    // 获取创作者信息
-    let creator: { nickname: string; avatarUrl: string | null } = {
-      nickname: '匿名用户',
-      avatarUrl: null,
-    }
+      // 检查是否公开（或者是用户自己的图片）
+      const isOwner = !!(userId && image.user_id === userId)
 
-    try {
-      const client = await clerkClient()
-      const creatorUser = await client.users.getUser(image.user_id)
-      creator = {
-        nickname:
-          creatorUser.username ||
-          creatorUser.firstName ||
-          `用户${image.user_id.slice(-6)}`,
-        avatarUrl: creatorUser.imageUrl || null,
+      if (!image.is_public && !isOwner) {
+        return {
+          success: false,
+          error: 'NOT_FOUND',
+          message: '封面不存在或未公开',
+        }
+      }
+
+      // 返回原图 URL（优化后）
+      const rawUrl = image.original_key
+        ? getCdnUrl(image.original_key, CDN_DOMAIN)
+        : getCdnUrl(image.preview_key, CDN_DOMAIN)
+      const imageUrl = getOptimizedImageUrl(rawUrl)
+
+      // generation_tasks is an array from the join, get the first element
+      const generationTask = Array.isArray(image.generation_tasks)
+        ? image.generation_tasks[0]
+        : image.generation_tasks
+
+      // 导航查询需要的数据
+      const currentLikesCount = image.likes_count
+      const currentCreatedAt = image.created_at
+
+      // 并行获取所有数据：点赞状态、创作者信息、上一张、下一张、随机
+      const [hasLiked, creator, prevResult, nextResult, randomCandidates] =
+        await Promise.all([
+          // 点赞状态
+          userId
+            ? supabase
+                .from('image_likes')
+                .select('id')
+                .eq('image_id', imageId)
+                .eq('user_id', userId)
+                .single()
+                .then(({ data }) => !!data)
+            : Promise.resolve(false),
+          // 创作者信息
+          clerkClient()
+            .then((client) => client.users.getUser(image.user_id))
+            .then((user) => ({
+              nickname:
+                user.username ||
+                user.firstName ||
+                `用户${image.user_id.slice(-6)}`,
+              avatarUrl: user.imageUrl || null,
+            }))
+            .catch(() => {
+              // 用户不存在或 Clerk API 错误，使用默认值
+              return { nickname: '匿名用户', avatarUrl: null }
+            }),
+          // 上一张（更热的）：likes_count 更高，或相同 likes_count 但更新
+          supabase
+            .from('images')
+            .select('id')
+            .eq('is_public', true)
+            .or(
+              `likes_count.gt.${currentLikesCount},and(likes_count.eq.${currentLikesCount},created_at.gt.${currentCreatedAt})`,
+            )
+            .order('likes_count', { ascending: true })
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .single(),
+          // 下一张（更冷的）：likes_count 更低，或相同 likes_count 但更旧
+          supabase
+            .from('images')
+            .select('id')
+            .eq('is_public', true)
+            .or(
+              `likes_count.lt.${currentLikesCount},and(likes_count.eq.${currentLikesCount},created_at.lt.${currentCreatedAt})`,
+            )
+            .order('likes_count', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single(),
+          // 随机候选：从热门图片中选取（排除当前图片）
+          supabase
+            .from('images')
+            .select('id')
+            .eq('is_public', true)
+            .neq('id', imageId)
+            .order('likes_count', { ascending: false })
+            .limit(50),
+        ])
+
+      // 从热门候选中随机选一张
+      const randomId =
+        randomCandidates.data && randomCandidates.data.length > 0
+          ? randomCandidates.data[
+              Math.floor(Math.random() * randomCandidates.data.length)
+            ].id
+          : null
+
+      const navigation: CoverNavigation = {
+        prevId: prevResult.data?.id || null,
+        nextId: nextResult.data?.id || null,
+        randomId,
+      }
+
+      return {
+        success: true,
+        data: {
+          id: image.id,
+          imageUrl,
+          prompt: generationTask?.prompt || '',
+          likesCount: image.likes_count,
+          hasLiked,
+          isOwner,
+          createdAt: image.created_at,
+          creator,
+          navigation,
+        },
       }
     } catch (error) {
-      console.error('Failed to fetch creator info:', error)
-      // 获取用户信息失败，使用默认值
+      console.error('Get cover detail error:', error)
+      return {
+        success: false,
+        error: 'SERVER_ERROR',
+        message: '获取封面详情失败，请稍后重试',
+      }
     }
-
-    // 返回原图 URL（优化后）
-    const rawUrl = image.original_key
-      ? getCdnUrl(image.original_key, CDN_DOMAIN)
-      : getCdnUrl(image.preview_key, CDN_DOMAIN)
-    const imageUrl = getOptimizedImageUrl(rawUrl)
-
-    // generation_tasks is an array from the join, get the first element
-    const generationTask = Array.isArray(image.generation_tasks)
-      ? image.generation_tasks[0]
-      : image.generation_tasks
-
-    // 并行查询导航数据（上一张、下一张、随机）
-    const currentLikesCount = image.likes_count
-    const currentCreatedAt = image.created_at
-
-    // 获取公开图片总数用于随机选择
-    const { count: totalPublic } = await supabase
-      .from('images')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_public', true)
-      .neq('id', imageId)
-
-    const randomOffset =
-      totalPublic && totalPublic > 0
-        ? Math.floor(Math.random() * totalPublic)
-        : 0
-
-    const [prevResult, nextResult, randomResult] = await Promise.all([
-      // 上一张（更热的）：likes_count 更高，或相同 likes_count 但更新
-      supabase
-        .from('images')
-        .select('id')
-        .eq('is_public', true)
-        .or(
-          `likes_count.gt.${currentLikesCount},and(likes_count.eq.${currentLikesCount},created_at.gt.${currentCreatedAt})`,
-        )
-        .order('likes_count', { ascending: true })
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .single(),
-
-      // 下一张（更冷的）：likes_count 更低，或相同 likes_count 但更旧
-      supabase
-        .from('images')
-        .select('id')
-        .eq('is_public', true)
-        .or(
-          `likes_count.lt.${currentLikesCount},and(likes_count.eq.${currentLikesCount},created_at.lt.${currentCreatedAt})`,
-        )
-        .order('likes_count', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single(),
-
-      // 随机一张（排除当前图片）- 使用随机偏移量
-      supabase
-        .from('images')
-        .select('id')
-        .eq('is_public', true)
-        .neq('id', imageId)
-        .order('created_at', { ascending: false })
-        .range(randomOffset, randomOffset)
-        .single(),
-    ])
-
-    const navigation: CoverNavigation = {
-      prevId: prevResult.data?.id || null,
-      nextId: nextResult.data?.id || null,
-      randomId: randomResult.data?.id || null,
-    }
-
-    return {
-      success: true,
-      data: {
-        id: image.id,
-        imageUrl,
-        prompt: generationTask?.prompt || '',
-        likesCount: image.likes_count,
-        hasLiked,
-        isOwner,
-        createdAt: image.created_at,
-        creator,
-        navigation,
-      },
-    }
-  } catch (error) {
-    console.error('Get cover detail error:', error)
-    return {
-      success: false,
-      error: 'SERVER_ERROR',
-      message: '获取封面详情失败，请稍后重试',
-    }
-  }
-}
+  },
+)
