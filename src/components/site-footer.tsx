@@ -12,6 +12,11 @@ const productLinks = [
 const aboutLinks = [
   { href: '/privacy', label: '隐私政策' },
   { href: '/terms', label: '服务协议' },
+  {
+    href: 'https://github.com/elvinn/hongbao-cover-ai/',
+    label: '开源代码',
+    external: true,
+  },
 ]
 
 export function SiteFooter() {
@@ -76,6 +81,9 @@ export function SiteFooter() {
                     <Link
                       href={link.href}
                       className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                      {...('external' in link && link.external
+                        ? { target: '_blank', rel: 'noopener noreferrer' }
+                        : {})}
                     >
                       {link.label}
                     </Link>
