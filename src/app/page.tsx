@@ -13,9 +13,7 @@ export default function Home() {
         <HeroSection />
         <div className="mx-auto mt-12 max-w-3xl space-y-12 sm:mt-16 sm:space-y-16">
           <InteractiveSection />
-          <div className="animate-in fade-in slide-in-from-bottom-4 delay-200 duration-700">
-            <SampleGallery />
-          </div>
+          <SampleGallery />
         </div>
       </div>
 
