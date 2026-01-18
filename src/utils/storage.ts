@@ -65,6 +65,11 @@ export function getSavedInput(): SavedInput | null {
   return getStorageWithExpiry<SavedInput>(INPUT_STORAGE_KEY)
 }
 
+export function clearInput(): void {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(INPUT_STORAGE_KEY)
+}
+
 export function clearSession(): void {
   if (typeof window === 'undefined') return
   localStorage.removeItem(SESSION_STORAGE_KEY)

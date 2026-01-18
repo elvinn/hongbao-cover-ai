@@ -19,7 +19,6 @@ import { SessionContext, useSessionContext } from '@/providers/session-provider'
  * - savedInput: 本地保存的输入
  * - refreshUserData: 刷新用户数据
  * - markAsPaid: 标记为已支付
- * - saveInput: 保存用户输入
  */
 export function useSession() {
   return useSessionContext()

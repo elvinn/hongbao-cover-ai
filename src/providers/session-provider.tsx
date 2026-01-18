@@ -10,21 +10,12 @@ import {
   type ReactNode,
 } from 'react'
 import { useUser, useAuth } from '@clerk/nextjs'
-import type { CoverStyle } from '@/types/hongbao'
 import type { DbUser, AccessLevel } from '@/types/database'
-
-// 本地存储 key
-const INPUT_STORAGE_KEY = 'hongbao_input'
 
 // 默认值（与数据库默认值一致）
 const DEFAULT_CREDITS = 1
 const DEFAULT_ACCESS_LEVEL: AccessLevel = 'free'
 const DEFAULT_GENERATION_COUNT = 0
-
-export interface SavedInput {
-  description: string
-  style: CoverStyle
-}
 
 interface SessionContextType {
   // Clerk 用户 ID
@@ -44,14 +35,9 @@ interface SessionContextType {
   isAuthenticated: boolean
   error: string | null
 
-  // 本地输入缓存
-  savedInput: SavedInput | null
-
   // 操作方法
   refreshUserData: () => Promise<void>
   markAsPaid: (creditsToAdd?: number) => Promise<void>
-  saveInput: (description: string, style: CoverStyle) => void
-  clearInput: () => void
 }
 
 const SessionContext = createContext<SessionContextType | null>(null)
@@ -65,7 +51,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   // 用户数据状态
   const [userData, setUserData] = useState<DbUser | null>(null)
-  const [savedInput, setSavedInput] = useState<SavedInput | null>(null)
 
   // 加载状态
   const [isLoading, setIsLoading] = useState(true)
@@ -124,25 +109,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id])
 
-  // 初始化：只有在 Clerk 加载完成后才处理
+  // 初始化：只有在 Clerk 加载完成后才处理用户数据
   useEffect(() => {
     if (!isAuthLoaded || !isUserLoaded) return
-
-    // 加载本地保存的输入
-    try {
-      const savedInputData = localStorage.getItem(INPUT_STORAGE_KEY)
-      if (savedInputData) {
-        const parsed = JSON.parse(savedInputData) as {
-          value: SavedInput
-          expiry: number
-        }
-        if (Date.now() < parsed.expiry) {
-          setSavedInput(parsed.value)
-        }
-      }
-    } catch {
-      // ignore
-    }
 
     // 如果用户已登录，加载用户数据
     if (isSignedIn && user) {
@@ -202,33 +171,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [isSignedIn],
   )
 
-  // 保存用户输入到本地存储
-  const saveInput = useCallback((description: string, style: CoverStyle) => {
-    const input: SavedInput = { description, style }
-    setSavedInput(input)
-
-    try {
-      localStorage.setItem(
-        INPUT_STORAGE_KEY,
-        JSON.stringify({
-          value: input,
-          expiry: Date.now() + 24 * 60 * 60 * 1000, // 24 小时过期
-        }),
-      )
-    } catch {
-      // ignore
-    }
-  }, [])
-
-  const clearInput = useCallback(() => {
-    setSavedInput(null)
-    try {
-      localStorage.removeItem(INPUT_STORAGE_KEY)
-    } catch {
-      // ignore
-    }
-  }, [])
-
   return (
     <SessionContext.Provider
       value={{
@@ -241,11 +183,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         isLoading: isLoading || !isAuthLoaded || !isUserLoaded,
         isAuthenticated: !!isSignedIn && !!userData,
         error,
-        savedInput,
         refreshUserData,
         markAsPaid,
-        saveInput,
-        clearInput,
       }}
     >
       {children}
