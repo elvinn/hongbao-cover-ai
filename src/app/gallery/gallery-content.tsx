@@ -29,8 +29,10 @@ export function GalleryContent({
   initialHasMore,
 }: GalleryContentProps) {
   const [sort, setSort] = useState<GallerySortOrder>('popular')
+  const [isSwitchingTabs, setIsSwitchingTabs] = useState(false)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const isInCooldownRef = useRef(false)
+  const previousSortRef = useRef<GallerySortOrder>(sort)
 
   // 始终使用 SSR 获取的初始数据
   const hasInitialData = initialImages.length > 0
@@ -40,6 +42,7 @@ export function GalleryContent({
     images,
     total,
     isLoading,
+    isFetching,
     isFetchingNextPage,
     hasNextPage,
     fetchNextPage,
@@ -109,8 +112,26 @@ export function GalleryContent({
     return () => clearTimeout(timer)
   }, [isFetchingNextPage])
 
+  // Clear switching state when we have new data
+  useEffect(() => {
+    if (images.length > 0 && isSwitchingTabs) {
+      // Use setTimeout to avoid setState in effect warning
+      // This schedules the state update for after the current render cycle
+      const timer = setTimeout(() => {
+        setIsSwitchingTabs(false)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  }, [images.length, isSwitchingTabs])
+
   const handleSortChange = useCallback((newSort: string) => {
-    setSort(newSort as GallerySortOrder)
+    const newSortValue = newSort as GallerySortOrder
+    // Detect tab switch and set state synchronously
+    if (previousSortRef.current !== newSortValue) {
+      setIsSwitchingTabs(true)
+      previousSortRef.current = newSortValue
+    }
+    setSort(newSortValue)
   }, [])
 
   const handleLoadMore = useCallback(() => {
@@ -119,12 +140,18 @@ export function GalleryContent({
     }
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
-  // Use initial data on first render, then use hook data
-  const displayImages = images.length > 0 ? images : initialImages
+  // Use initial data on first render, but not when switching tabs
+  // When switching tabs, wait for new data from the hook
+  const displayImages =
+    images.length > 0 ? images : isSwitchingTabs ? [] : initialImages
   const displayTotal = total > 0 ? total : initialTotal
 
-  // 只在切换排序且没有数据时显示全局加载状态
-  const showGlobalLoading = isLoading && displayImages.length === 0
+  // Show full loading screen when:
+  // 1. Initial load with no data (isLoading && no images)
+  // 2. Switching tabs with no data yet (isSwitchingTabs && (isLoading || isFetching) && no images)
+  const showGlobalLoading =
+    (isLoading && displayImages.length === 0) ||
+    (isSwitchingTabs && (isLoading || isFetching) && images.length === 0)
 
   return (
     <>
@@ -193,7 +220,7 @@ export function GalleryContent({
         </div>
       )}
 
-      {/* Gallery Grid */}
+      {/* Gallery Grid - Show images when we have data */}
       {displayImages.length > 0 && !showGlobalLoading && (
         <>
           <div className="grid grid-cols-2 gap-4 sm:gap-8 md:grid-cols-3">

@@ -75,7 +75,7 @@ export function PublicGalleryCard({
         <p
           onClick={handlePromptClick}
           className={cn(
-            'cursor-pointer text-xs leading-relaxed font-medium text-slate-600 transition-colors group-hover:text-slate-900',
+            'min-h-[3.25em] cursor-pointer text-xs leading-relaxed font-medium text-slate-600 transition-colors group-hover:text-slate-900',
             !isExpanded && 'line-clamp-2',
           )}
         >
