@@ -53,7 +53,7 @@ export function FeaturesSection() {
               <div className="relative aspect-4/7 overflow-hidden rounded-3xl shadow-2xl ring-1 ring-black/5">
                 {/* Base Cover Image */}
                 <Image
-                  src="https://cdn.hongbao.elvinn.wiki/public/official.jpg"
+                  src="https://cdn.hongbao.elvinn.wiki/cdn-cgi/image/format=auto,quality=75/public/official.jpg"
                   alt="红包封面预览"
                   fill
                   sizes="(max-width: 640px) 12rem, 14rem"
@@ -63,7 +63,7 @@ export function FeaturesSection() {
 
                 {/* Bottom Flap Overlay */}
                 <Image
-                  src="https://cdn.hongbao.elvinn.wiki/public/official-bottom.png"
+                  src="https://cdn.hongbao.elvinn.wiki/cdn-cgi/image/format=auto,quality=75/public/official-bottom.png"
                   alt="红包底部"
                   fill
                   sizes="(max-width: 640px) 12rem, 14rem"
