@@ -182,4 +182,10 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Performance optimization: defer rendering of off-screen gallery cards */
+  .gallery-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 400px;
+  }
 }

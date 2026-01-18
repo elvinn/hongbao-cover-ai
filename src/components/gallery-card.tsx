@@ -99,7 +99,7 @@ export function GalleryCard({ image }: GalleryCardProps) {
   return (
     <div
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-2 transition-all hover:-translate-y-1 hover:border-red-200/60 hover:shadow-xl hover:shadow-red-500/5',
+        'gallery-card group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-2 transition-all hover:-translate-y-1 hover:border-red-200/60 hover:shadow-xl hover:shadow-red-500/5',
       )}
     >
       {/* Cover Image Wrapper */}

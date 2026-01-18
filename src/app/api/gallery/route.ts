@@ -31,28 +31,18 @@ export async function GET(request: NextRequest) {
       ),
     )
 
-    // 获取当前用户 ID（可选，未登录时为 null）
-    const { userId } = await auth()
-
     const offset = (page - 1) * pageSize
     const supabase = createServiceRoleClient()
 
-    // 获取公开图片总数
-    const { count: total, error: countError } = await supabase
+    // Start all independent operations in parallel for better performance
+    const authPromise = auth()
+    const countPromise = supabase
       .from('images')
       .select('*', { count: 'exact', head: true })
       .eq('is_public', true)
 
-    if (countError) {
-      console.error('Failed to count images:', countError)
-      return NextResponse.json(
-        { error: 'FETCH_FAILED', message: '获取图片列表失败' },
-        { status: 500 },
-      )
-    }
-
-    // 构建查询
-    let query = supabase
+    // Build images query (can run in parallel with auth and count)
+    let imagesQuery = supabase
       .from('images')
       .select(
         `
@@ -68,21 +58,35 @@ export async function GET(request: NextRequest) {
       )
       .eq('is_public', true)
 
-    // 排序
+    // Apply sorting
     if (sort === 'newest') {
-      query = query.order('created_at', { ascending: false })
+      imagesQuery = imagesQuery.order('created_at', { ascending: false })
     } else {
-      // popular - 按点赞数排序，相同点赞数按时间排序
-      query = query
+      // popular - sort by likes, then by time for same likes count
+      imagesQuery = imagesQuery
         .order('likes_count', { ascending: false })
         .order('created_at', { ascending: false })
     }
 
-    // 分页
-    const { data: images, error: imagesError } = await query.range(
-      offset,
-      offset + pageSize - 1,
-    )
+    // Add pagination and execute all queries in parallel
+    const imagesPromise = imagesQuery.range(offset, offset + pageSize - 1)
+
+    const [{ userId }, countResult, imagesResult] = await Promise.all([
+      authPromise,
+      countPromise,
+      imagesPromise,
+    ])
+
+    const { count: total, error: countError } = countResult
+    const { data: images, error: imagesError } = imagesResult
+
+    if (countError) {
+      console.error('Failed to count images:', countError)
+      return NextResponse.json(
+        { error: 'FETCH_FAILED', message: '获取图片列表失败' },
+        { status: 500 },
+      )
+    }
 
     if (imagesError) {
       console.error('Failed to fetch images:', imagesError)
