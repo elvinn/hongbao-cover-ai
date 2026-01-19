@@ -7,7 +7,7 @@ import {
   SignedOut,
   UserButton,
 } from '@clerk/nextjs'
-import { ImageIcon } from 'lucide-react'
+import { ImageIcon, TicketIcon } from 'lucide-react'
 import { Button } from './ui/button'
 
 export function AuthButton() {
@@ -40,6 +40,11 @@ export function AuthButton() {
               label="我的封面"
               labelIcon={<ImageIcon className="h-4 w-4" />}
               href="/my-gallery"
+            />
+            <UserButton.Link
+              label="兑换码兑换"
+              labelIcon={<TicketIcon className="h-4 w-4" />}
+              href="/redeem"
             />
           </UserButton.MenuItems>
         </UserButton>

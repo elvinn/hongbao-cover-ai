@@ -130,6 +130,31 @@ CREATE INDEX IF NOT EXISTS idx_payments_user_id ON public.payments(user_id);
 CREATE INDEX IF NOT EXISTS idx_payments_status ON public.payments(status);
 CREATE INDEX IF NOT EXISTS idx_payments_stripe_session_id ON public.payments(stripe_session_id);
 
+-- -----------------------------------------------------------------------------
+-- 6. Redemption Codes 表 - 兑换码
+-- -----------------------------------------------------------------------------
+-- 用于存储兑换码，支持给用户增加 credits 和升级 premium
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.redemption_codes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code TEXT NOT NULL UNIQUE,                      -- 兑换码（唯一）
+  credits_amount INTEGER DEFAULT 3 NOT NULL,      -- 兑换后增加的 credits 数量
+  validity_days INTEGER DEFAULT 7 NOT NULL,       -- credits 有效期（天）
+  is_used BOOLEAN DEFAULT FALSE NOT NULL,         -- 是否已被使用
+  used_by TEXT REFERENCES public.users(id),       -- 使用者的 user ID
+  used_at TIMESTAMPTZ,                            -- 使用时间
+  expires_at TIMESTAMPTZ,                         -- 兑换码过期时间（null 表示永不过期）
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  
+  CONSTRAINT valid_credits_amount CHECK (credits_amount > 0),
+  CONSTRAINT valid_validity_days CHECK (validity_days > 0)
+);
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_redemption_codes_code ON public.redemption_codes(code);
+CREATE INDEX IF NOT EXISTS idx_redemption_codes_is_used ON public.redemption_codes(is_used) WHERE is_used = FALSE;
+CREATE INDEX IF NOT EXISTS idx_redemption_codes_used_by ON public.redemption_codes(used_by);
+
 -- =============================================================================
 -- Row Level Security (RLS) - 禁用
 -- =============================================================================
@@ -141,3 +166,4 @@ ALTER TABLE public.generation_tasks DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.images DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.image_likes DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.redemption_codes DISABLE ROW LEVEL SECURITY;

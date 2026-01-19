@@ -84,6 +84,21 @@ export interface DbPayment {
 }
 
 /**
+ * redemption_codes 表
+ */
+export interface DbRedemptionCode {
+  id: string
+  code: string
+  credits_amount: number
+  validity_days: number
+  is_used: boolean
+  used_by: string | null
+  used_at: string | null
+  expires_at: string | null
+  created_at: string
+}
+
+/**
  * Supabase Database type for type-safe queries
  */
 export interface Database {
@@ -133,6 +148,15 @@ export interface Database {
           created_at?: string
         }
         Update: Partial<Omit<DbPayment, 'id' | 'user_id' | 'created_at'>>
+      }
+      redemption_codes: {
+        Row: DbRedemptionCode
+        Insert: Omit<DbRedemptionCode, 'id' | 'created_at' | 'is_used'> & {
+          id?: string
+          created_at?: string
+          is_used?: boolean
+        }
+        Update: Partial<Omit<DbRedemptionCode, 'id' | 'code' | 'created_at'>>
       }
     }
   }

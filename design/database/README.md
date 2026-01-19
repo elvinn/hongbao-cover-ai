@@ -11,12 +11,19 @@
 │   Clerk Auth    │────►│  public.users   │◄────│    payments     │
 │  (身份验证)      │     │  (用户信息)      │     │   (支付记录)    │
 └─────────────────┘     └────────┬────────┘     └─────────────────┘
-                                │
-                                ▼
-                       ┌─────────────────┐     ┌─────────────────┐
-                       │generation_tasks │────►│     images      │
-                       │  (生成任务)      │     │  (图片元数据)   │
-                       └─────────────────┘     └─────────────────┘
+                               │ ▲
+                               │ │
+                               ▼ │
+                      ┌─────────────────┐     ┌─────────────────┐
+                      │generation_tasks │────►│     images      │
+                      │  (生成任务)      │     │  (图片元数据)   │
+                      └─────────────────┘     └─────────────────┘
+                               ▲
+                               │
+                      ┌─────────────────┐
+                      │redemption_codes │
+                      │   (兑换码)       │
+                      └─────────────────┘
 ```
 
 ## 表结构
@@ -102,6 +109,30 @@ PENDING → PROCESSING → SUCCEEDED
 | created_at              | timestamptz | ✓    | now()             | 创建时间                       |
 | completed_at            | timestamptz | -    | null              | 完成时间                       |
 
+### 5. redemption_codes - 兑换码
+
+| 字段           | 类型        | 必填 | 默认值            | 说明                           |
+| -------------- | ----------- | ---- | ----------------- | ------------------------------ |
+| id             | uuid        | ✓    | gen_random_uuid() | 主键                           |
+| code           | text        | ✓    | -                 | 兑换码（唯一）                 |
+| credits_amount | integer     | ✓    | 3                 | 兑换后增加的 credits 数量      |
+| validity_days  | integer     | ✓    | 7                 | credits 有效期（天）           |
+| is_used        | boolean     | ✓    | false             | 是否已被使用                   |
+| used_by        | text        | -    | null              | 使用者的 user ID               |
+| used_at        | timestamptz | -    | null              | 使用时间                       |
+| expires_at     | timestamptz | -    | null              | 兑换码过期时间（null=永不过期）|
+| created_at     | timestamptz | ✓    | now()             | 创建时间                       |
+
+**兑换逻辑**：
+
+1. 用户输入兑换码
+2. 验证兑换码是否有效（存在、未使用、未过期）
+3. 成功后：
+   - 标记兑换码为已使用（is_used=true, used_by, used_at）
+   - 升级用户为 premium
+   - 累加 credits（如当前有效则累加，否则覆盖）
+   - 计算过期时间（取现有过期时间与新过期时间的较晚者，但如果现有过期时间已超过当前时间+兑换码有效期，则保持不变）
+
 ## Row Level Security (RLS)
 
 由于使用 Clerk 进行身份验证，所有数据库操作通过 `service_role` 进行，RLS 已禁用。
@@ -183,4 +214,25 @@ CLERK_SECRET_KEY=your_clerk_secret_key
 3. 从 images 表查询 original_key
 4. 生成 R2 签名 URL
 5. 返回给用户
+```
+
+### 兑换码兑换
+
+```
+1. 用户输入兑换码
+2. 验证兑换码有效性：
+   - 检查兑换码是否存在
+   - 检查是否已被使用 (is_used = false)
+   - 检查是否过期 (expires_at IS NULL OR expires_at > NOW())
+3. 兑换成功：
+   - 标记兑换码为已使用 (is_used=true, used_by, used_at)
+   - 升级用户为 premium
+   - 计算新的 credits 和过期时间：
+     a. 如果用户当前 credits 已过期或为 0：
+        - credits = 兑换码 credits_amount
+        - 过期时间 = NOW() + validity_days
+     b. 如果用户当前 credits 有效：
+        - credits = 当前 credits + 兑换码 credits_amount
+        - 如果当前过期时间 > NOW() + validity_days：保持当前过期时间
+        - 否则：过期时间 = NOW() + validity_days
 ```
