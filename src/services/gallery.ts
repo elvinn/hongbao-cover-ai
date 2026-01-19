@@ -106,11 +106,12 @@ export async function fetchPublicGalleryImages(
     likedImageIds = new Set(likes?.map((l) => l.image_id) || [])
   }
 
-  // Process image URLs (use original images)
+  // Process image URLs (use original images with CDN optimization)
   const processedImages = (images || []).map((image) => {
-    const imageUrl = image.original_key
+    const rawUrl = image.original_key
       ? getCdnUrl(image.original_key, CDN_DOMAIN)
       : getCdnUrl(image.preview_key, CDN_DOMAIN)
+    const imageUrl = getOptimizedImageUrl(rawUrl)
 
     // generation_tasks is an array from the join, get the first element
     const generationTask = Array.isArray(image.generation_tasks)
