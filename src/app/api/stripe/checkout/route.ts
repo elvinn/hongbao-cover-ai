@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
             currency: 'cny',
             product_data: {
               name: `红包封面 AI - ${plan.name}`,
-              description: `${plan.credits} 次生成机会，${plan.validityDisplay}有效`,
+              description: `${plan.credits} 次生成机会，永久有效`,
             },
             unit_amount: plan.price,
           },
@@ -93,7 +93,6 @@ export async function POST(request: NextRequest) {
         userId: userId,
         planId: planId,
         credits: plan.credits.toString(),
-        validityDays: plan.validityDays.toString(),
       },
       success_url: `${origin}/pricing/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/pricing?canceled=true`,
@@ -110,7 +109,6 @@ export async function POST(request: NextRequest) {
       stripe_session_id: session.id,
       plan_id: planId,
       credits_added: plan.credits,
-      credits_validity_days: plan.validityDays,
     })
 
     if (paymentError) {

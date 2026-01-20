@@ -19,7 +19,6 @@ export type PlanId = 'trial' | 'premium'
 export interface DbUser {
   id: string
   credits: number
-  credits_expires_at: string | null
   access_level: AccessLevel
   generation_count: number
   created_at: string
@@ -78,7 +77,6 @@ export interface DbPayment {
   stripe_session_id: string | null
   plan_id: PlanId | null
   credits_added: number
-  credits_validity_days: number | null
   created_at: string
   completed_at: string | null
 }
@@ -90,7 +88,6 @@ export interface DbRedemptionCode {
   id: string
   code: string
   credits_amount: number
-  validity_days: number
   is_used: boolean
   used_by: string | null
   used_at: string | null

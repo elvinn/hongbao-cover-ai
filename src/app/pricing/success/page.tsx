@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 interface VerifySessionResponse {
   success: boolean
   credits?: number
-  creditsExpiresAt?: string | null
   accessLevel?: string
   error?: string
 }
@@ -49,16 +48,6 @@ export default function PaymentSuccessPage() {
 
     verifySession()
   }, [sessionId])
-
-  const formatExpiryDate = (dateString: string | null | undefined) => {
-    if (!dateString) return null
-    const date = new Date(dateString)
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
 
   if (isLoading) {
     return (
@@ -153,14 +142,10 @@ export default function PaymentSuccessPage() {
               </span>
             </div>
 
-            {verifyResult.creditsExpiresAt && (
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">有效期至</span>
-                <span className="text-foreground">
-                  {formatExpiryDate(verifyResult.creditsExpiresAt)}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">有效期</span>
+              <span className="text-foreground font-medium">永久有效</span>
+            </div>
 
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">会员状态</span>

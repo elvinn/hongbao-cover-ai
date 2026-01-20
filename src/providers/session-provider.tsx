@@ -26,7 +26,6 @@ interface SessionContextType {
 
   // 快捷访问字段
   credits: number
-  creditsExpiresAt: string | null
   accessLevel: AccessLevel
   generationCount: number
 
@@ -78,7 +77,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
             setUserData({
               id: user?.id || '',
               credits: data.credits ?? DEFAULT_CREDITS,
-              credits_expires_at: data.creditsExpiresAt ?? null,
               access_level: data.accessLevel ?? DEFAULT_ACCESS_LEVEL,
               generation_count:
                 data.generationCount ?? DEFAULT_GENERATION_COUNT,
@@ -95,7 +93,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setUserData({
         id: data.id,
         credits: data.credits,
-        credits_expires_at: data.creditsExpiresAt ?? null,
         access_level: data.accessLevel,
         generation_count: data.generationCount,
         created_at: data.createdAt,
@@ -157,7 +154,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               ? {
                   ...prev,
                   credits: data.credits,
-                  credits_expires_at: data.creditsExpiresAt,
                   access_level: data.accessLevel,
                   generation_count: data.generationCount,
                 }
@@ -177,7 +173,6 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         userId: user?.id ?? null,
         userData,
         credits: userData?.credits ?? DEFAULT_CREDITS,
-        creditsExpiresAt: userData?.credits_expires_at ?? null,
         accessLevel: userData?.access_level ?? DEFAULT_ACCESS_LEVEL,
         generationCount: userData?.generation_count ?? DEFAULT_GENERATION_COUNT,
         isLoading: isLoading || !isAuthLoaded || !isUserLoaded,

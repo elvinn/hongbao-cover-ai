@@ -58,7 +58,7 @@ export default function TermsPage() {
             <ul className="text-muted-foreground mt-3 list-inside list-disc space-y-2 text-sm">
               <li>免费用户可体验 1 次 AI 生成，生成的图片带有水印</li>
               <li>付费用户可获得更多生成次数和高清无水印图片</li>
-              <li>购买的 Credits 有效期为 30 天，过期失效</li>
+              <li>购买的生成次数永久有效，不会过期</li>
               <li>所有付费项目一经购买，除法律规定外不予退款</li>
             </ul>
           </section>

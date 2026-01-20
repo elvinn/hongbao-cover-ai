@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { getStripe } from '@/services/stripe'
 import { createServiceRoleClient } from '@/supabase/server'
-import { getPlan } from '@/config/pricing'
 import type { PlanId } from '@/types/database'
 
 interface VerifySessionResponse {
   success: boolean
   credits?: number
-  creditsExpiresAt?: string | null
   accessLevel?: string
   error?: string
 }
@@ -97,14 +95,12 @@ export async function GET(
         userId,
         paymentRecord.plan_id as PlanId,
         paymentRecord.credits_added,
-        paymentRecord.credits_validity_days || 0,
         sessionId,
         session.payment_intent as string,
       )
     } else if (!paymentRecord) {
       // 记录不存在（pending 记录创建失败），从 metadata 获取参数创建记录
       const credits = parseInt(metadata.credits || '0', 10)
-      const validityDays = parseInt(metadata.validityDays || '0', 10)
       const planId = metadata.planId as PlanId
 
       if (!planId || credits <= 0) {
@@ -119,7 +115,6 @@ export async function GET(
         userId,
         planId,
         credits,
-        validityDays,
         sessionId,
         session.payment_intent as string,
         session.amount_total || 0,
@@ -160,30 +155,19 @@ async function getUserCredits(
 ) {
   const { data: userData } = await supabase
     .from('users')
-    .select('credits, credits_expires_at, access_level')
+    .select('credits, access_level')
     .eq('id', userId)
     .single()
 
   if (!userData) {
     return {
       credits: 0,
-      creditsExpiresAt: null,
       accessLevel: 'free',
     }
   }
 
-  // 检查 credits 是否过期
-  let effectiveCredits = userData.credits
-  let creditsExpiresAt = userData.credits_expires_at
-
-  if (creditsExpiresAt && new Date(creditsExpiresAt) < new Date()) {
-    effectiveCredits = 0
-    creditsExpiresAt = null
-  }
-
   return {
-    credits: effectiveCredits,
-    creditsExpiresAt,
+    credits: userData.credits,
     accessLevel: userData.access_level,
   }
 }
@@ -196,12 +180,11 @@ async function processPaymentFallback(
   userId: string,
   planId: PlanId,
   credits: number,
-  validityDays: number,
   sessionId: string,
   paymentIntentId: string,
 ): Promise<void> {
   // 更新用户 credits
-  await updateUserCredits(supabase, userId, credits, validityDays)
+  await updateUserCredits(supabase, userId, credits)
 
   // 更新 payment 记录为 completed
   const { error: paymentError } = await supabase
@@ -231,13 +214,12 @@ async function processPaymentFallbackWithCreate(
   userId: string,
   planId: PlanId,
   credits: number,
-  validityDays: number,
   sessionId: string,
   paymentIntentId: string,
   amount: number,
 ): Promise<void> {
   // 更新用户 credits
-  await updateUserCredits(supabase, userId, credits, validityDays)
+  await updateUserCredits(supabase, userId, credits)
 
   // 创建 completed 状态的 payment 记录
   const { error: paymentError } = await supabase.from('payments').insert({
@@ -249,7 +231,6 @@ async function processPaymentFallbackWithCreate(
     stripe_session_id: sessionId,
     plan_id: planId,
     credits_added: credits,
-    credits_validity_days: validityDays,
     completed_at: new Date().toISOString(),
   })
 
@@ -264,22 +245,17 @@ async function processPaymentFallbackWithCreate(
 }
 
 /**
- * 更新用户 credits（累加逻辑）
+ * 更新用户 credits（累加逻辑，永不过期）
  */
 async function updateUserCredits(
   supabase: ReturnType<typeof createServiceRoleClient>,
   userId: string,
   credits: number,
-  validityDays: number,
 ): Promise<void> {
-  // 计算过期时间
-  const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + validityDays)
-
   // 获取当前用户数据
   const { data: userData, error: fetchError } = await supabase
     .from('users')
-    .select('credits, credits_expires_at')
+    .select('credits')
     .eq('id', userId)
     .single()
 
@@ -288,29 +264,14 @@ async function updateUserCredits(
     throw new Error('获取用户数据失败')
   }
 
-  // 计算新的 credits
-  let newCredits = credits
-  let newExpiresAt = expiresAt.toISOString()
+  // 累加 credits
+  const newCredits = userData.credits + credits
 
-  if (userData.credits > 0 && userData.credits_expires_at) {
-    const currentExpiry = new Date(userData.credits_expires_at)
-    if (currentExpiry > new Date()) {
-      // 当前 credits 未过期，累加
-      newCredits = userData.credits + credits
-      // 过期时间取两者中较晚的
-      newExpiresAt =
-        currentExpiry > expiresAt
-          ? userData.credits_expires_at
-          : expiresAt.toISOString()
-    }
-  }
-
-  // 更新用户数据
+  // 更新用户数据（credits 永不过期）
   const { error: updateError } = await supabase
     .from('users')
     .update({
       credits: newCredits,
-      credits_expires_at: newExpiresAt,
       access_level: 'premium',
     })
     .eq('id', userId)

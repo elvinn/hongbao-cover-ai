@@ -24,7 +24,6 @@ export async function GET() {
     return NextResponse.json({
       id: userData.id,
       credits: userData.credits,
-      creditsExpiresAt: userData.credits_expires_at,
       accessLevel: userData.access_level,
       generationCount: userData.generation_count,
       createdAt: userData.created_at,

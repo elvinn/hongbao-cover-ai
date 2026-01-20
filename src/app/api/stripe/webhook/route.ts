@@ -72,7 +72,6 @@ async function handleCheckoutCompleted(
   const userId = metadata.userId
   const planId = metadata.planId as PlanId
   const credits = parseInt(metadata.credits || '0', 10)
-  const validityDays = parseInt(metadata.validityDays || '0', 10)
 
   if (!userId || !planId || credits <= 0) {
     console.error('Invalid metadata:', metadata)
@@ -82,14 +81,10 @@ async function handleCheckoutCompleted(
   const plan = getPlan(planId)
   const supabase = createServiceRoleClient()
 
-  // 计算过期时间
-  const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + validityDays)
-
   // 获取当前用户数据
   const { data: userData, error: fetchError } = await supabase
     .from('users')
-    .select('credits, credits_expires_at')
+    .select('credits')
     .eq('id', userId)
     .single()
 
@@ -98,30 +93,14 @@ async function handleCheckoutCompleted(
     return
   }
 
-  // 计算新的 credits
-  // 如果用户已有 credits 且未过期，则累加；否则使用新购买的 credits
-  let newCredits = credits
-  let newExpiresAt = expiresAt.toISOString()
-
-  if (userData.credits > 0 && userData.credits_expires_at) {
-    const currentExpiry = new Date(userData.credits_expires_at)
-    if (currentExpiry > new Date()) {
-      // 当前 credits 未过期，累加
-      newCredits = userData.credits + credits
-      // 过期时间取两者中较晚的
-      newExpiresAt =
-        currentExpiry > expiresAt
-          ? userData.credits_expires_at
-          : expiresAt.toISOString()
-    }
-  }
+  // 累加 credits（永不过期）
+  const newCredits = userData.credits + credits
 
   // 更新用户数据
   const { error: updateError } = await supabase
     .from('users')
     .update({
       credits: newCredits,
-      credits_expires_at: newExpiresAt,
       access_level: 'premium',
     })
     .eq('id', userId)
@@ -157,7 +136,6 @@ async function handleCheckoutCompleted(
       stripe_session_id: session.id,
       plan_id: planId,
       credits_added: credits,
-      credits_validity_days: validityDays,
       completed_at: new Date().toISOString(),
     })
 
@@ -167,7 +145,5 @@ async function handleCheckoutCompleted(
     }
   }
 
-  console.log(
-    `Payment completed for user ${userId}: +${credits} credits, expires at ${newExpiresAt}`,
-  )
+  console.log(`Payment completed for user ${userId}: +${credits} credits`)
 }

@@ -22,9 +22,8 @@ const PRICING_FAQS = [
       '支付成功后，生成次数将立即自动充值到您的账户中。您可以在个人中心查看余额。',
   },
   {
-    question: '生成次数有效期是多久？',
-    answer:
-      '体验版有效期为 7 天，畅享版有效期为 3 个月（90 天）。建议在有效期内使用。',
+    question: '生成次数会过期吗？',
+    answer: '不会！购买的生成次数永久有效，次数永不过期，您可以随时使用。',
   },
   {
     question: '支持退款吗？',
@@ -135,7 +134,7 @@ export default function PricingPage() {
           <div className="flex items-center gap-2">
             <Sparkles className="text-primary h-5 w-5" />
             <span className="text-muted-foreground text-sm font-medium">
-              生成次数立即到账
+              永久有效 · 次数永不过期
             </span>
           </div>
           <div className="flex items-center gap-2">

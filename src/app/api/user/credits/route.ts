@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { createServiceRoleClient } from '@/supabase/server'
 import { ensureUserExists } from '@/supabase/auth'
 
 /**
@@ -19,29 +18,11 @@ export async function GET() {
       )
     }
 
-    // 使用 service role client
-    const supabase = createServiceRoleClient()
-
     // 确保用户存在并获取数据
     const userData = await ensureUserExists(userId)
 
-    // 检查 credits 是否过期
-    let effectiveCredits = userData.credits
-    let creditsExpiresAt = userData.credits_expires_at
-    if (creditsExpiresAt && new Date(creditsExpiresAt) < new Date()) {
-      // Credits 已过期，清零（但保留 access_level）
-      effectiveCredits = 0
-      creditsExpiresAt = null
-      // 异步更新数据库中的 credits
-      await supabase
-        .from('users')
-        .update({ credits: 0, credits_expires_at: null })
-        .eq('id', userId)
-    }
-
     return NextResponse.json({
-      credits: effectiveCredits,
-      creditsExpiresAt: creditsExpiresAt,
+      credits: userData.credits,
       accessLevel: userData.access_level,
       generationCount: userData.generation_count,
     })

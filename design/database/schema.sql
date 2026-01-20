@@ -10,8 +10,7 @@
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.users (
   id TEXT PRIMARY KEY,                             -- Clerk user ID (格式: user_xxx)
-  credits INTEGER DEFAULT 1 NOT NULL,              -- 剩余生成次数
-  credits_expires_at TIMESTAMPTZ,                  -- Credits 过期时间（null 表示永不过期）
+  credits INTEGER DEFAULT 1 NOT NULL,              -- 剩余生成次数（永久有效）
   access_level TEXT DEFAULT 'free' NOT NULL,       -- 'free' | 'premium'
   generation_count INTEGER DEFAULT 0 NOT NULL,     -- 总生成次数
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
@@ -116,8 +115,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
   provider_transaction_id TEXT,                  -- 支付平台的交易 ID
   stripe_session_id TEXT,                        -- Stripe Checkout Session ID
   plan_id TEXT,                                  -- 套餐 ID: 'trial' | 'premium'
-  credits_added INTEGER DEFAULT 1 NOT NULL,      -- 增加的生成次数
-  credits_validity_days INTEGER,                 -- Credits 有效天数
+  credits_added INTEGER DEFAULT 1 NOT NULL,      -- 增加的生成次数（永久有效）
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   completed_at TIMESTAMPTZ,
   
@@ -134,20 +132,19 @@ CREATE INDEX IF NOT EXISTS idx_payments_stripe_session_id ON public.payments(str
 -- 6. Redemption Codes 表 - 兑换码
 -- -----------------------------------------------------------------------------
 -- 用于存储兑换码，支持给用户增加 credits 和升级 premium
+-- Credits 永久有效，不会过期
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.redemption_codes (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code TEXT NOT NULL UNIQUE,                      -- 兑换码（唯一）
   credits_amount INTEGER DEFAULT 3 NOT NULL,      -- 兑换后增加的 credits 数量
-  validity_days INTEGER DEFAULT 7 NOT NULL,       -- credits 有效期（天）
   is_used BOOLEAN DEFAULT FALSE NOT NULL,         -- 是否已被使用
   used_by TEXT REFERENCES public.users(id),       -- 使用者的 user ID
   used_at TIMESTAMPTZ,                            -- 使用时间
   expires_at TIMESTAMPTZ,                         -- 兑换码过期时间（null 表示永不过期）
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
   
-  CONSTRAINT valid_credits_amount CHECK (credits_amount > 0),
-  CONSTRAINT valid_validity_days CHECK (validity_days > 0)
+  CONSTRAINT valid_credits_amount CHECK (credits_amount > 0)
 );
 
 -- 创建索引

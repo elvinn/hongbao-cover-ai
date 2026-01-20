@@ -70,17 +70,6 @@ export default function RedeemPage() {
     [code],
   )
 
-  const formatExpiresAt = (expiresAt: string | null) => {
-    if (!expiresAt) return '永久有效'
-    const date = new Date(expiresAt)
-    if (date < new Date()) return '已过期'
-    return date.toLocaleDateString('zh-CN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
   return (
     <main className="flex min-h-screen flex-col items-center">
       <div className="container max-w-lg px-4 py-12 sm:py-20">
@@ -149,9 +138,9 @@ export default function RedeemPage() {
                     </p>
                   </div>
                   <div className="rounded-lg bg-white/60 p-3">
-                    <p className="text-muted-foreground mb-1">有效期至</p>
+                    <p className="text-muted-foreground mb-1">有效期</p>
                     <p className="text-foreground text-lg font-bold">
-                      {formatExpiresAt(result.expiresAt)}
+                      永久有效
                     </p>
                   </div>
                 </div>

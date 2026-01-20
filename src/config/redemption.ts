@@ -8,8 +8,6 @@
 export const REDEMPTION_DEFAULTS = {
   /** 默认兑换 credits 数量 */
   credits: 3,
-  /** 默认有效期（天） */
-  validityDays: 7,
 } as const
 
 /**
@@ -19,6 +17,5 @@ export interface RedemptionResult {
   success: boolean
   creditsAdded: number
   newCredits: number
-  expiresAt: string
   message: string
 }

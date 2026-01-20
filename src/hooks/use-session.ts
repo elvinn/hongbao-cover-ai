@@ -9,14 +9,12 @@ import { SessionContext, useSessionContext } from '@/providers/session-provider'
  * 返回值:
  * - userId: Clerk 用户 ID
  * - userData: 用户数据（来自 public.users 表）
- * - credits: 剩余生成次数
- * - creditsExpiresAt: Credits 过期时间
+ * - credits: 剩余生成次数（永久有效）
  * - accessLevel: 访问级别 ('free' | 'premium')
  * - generationCount: 累计生成次数
  * - isLoading: 是否正在加载
  * - isAuthenticated: 是否已认证
  * - error: 错误信息
- * - savedInput: 本地保存的输入
  * - refreshUserData: 刷新用户数据
  * - markAsPaid: 标记为已支付
  */

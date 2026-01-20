@@ -79,29 +79,9 @@ export async function POST(request: NextRequest) {
     // 确保用户存在
     const userData = await ensureUserExists(userId)
 
-    // 计算新的 credits 和过期时间
+    // 计算新的 credits
     const creditsToAdd = redemptionCode.credits_amount
-    const validityDays = redemptionCode.validity_days
-
-    // 计算新的过期时间
-    const newExpiresAt = new Date()
-    newExpiresAt.setDate(newExpiresAt.getDate() + validityDays)
-
-    let newCredits = creditsToAdd
-    let finalExpiresAt = newExpiresAt.toISOString()
-
-    // 检查用户当前 credits 是否有效
-    if (userData.credits > 0 && userData.credits_expires_at) {
-      const currentExpiry = new Date(userData.credits_expires_at)
-      if (currentExpiry > new Date()) {
-        // 当前 credits 未过期，累加
-        newCredits = userData.credits + creditsToAdd
-        // 如果当前过期时间 > 新过期时间，保持当前过期时间
-        if (currentExpiry > newExpiresAt) {
-          finalExpiresAt = userData.credits_expires_at
-        }
-      }
-    }
+    const newCredits = userData.credits + creditsToAdd
 
     // 使用事务更新（先更新兑换码，再更新用户）
     // 1. 标记兑换码为已使用
@@ -128,7 +108,6 @@ export async function POST(request: NextRequest) {
       .from('users')
       .update({
         credits: newCredits,
-        credits_expires_at: finalExpiresAt,
         access_level: 'premium',
       })
       .eq('id', userId)
@@ -155,12 +134,11 @@ export async function POST(request: NextRequest) {
       success: true,
       creditsAdded: creditsToAdd,
       newCredits: newCredits,
-      expiresAt: finalExpiresAt,
       message: `兑换成功！获得 ${creditsToAdd} 次生成机会`,
     }
 
     console.log(
-      `Redemption completed for user ${userId}: code=${cleanCode}, +${creditsToAdd} credits, total=${newCredits}, expires at ${finalExpiresAt}`,
+      `Redemption completed for user ${userId}: code=${cleanCode}, +${creditsToAdd} credits, total=${newCredits}`,
     )
 
     return NextResponse.json(result)
