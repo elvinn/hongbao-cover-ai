@@ -22,7 +22,7 @@ export default function TutorialPage() {
   return (
     <main className="flex min-h-screen flex-col items-center">
       <div className="container max-w-4xl px-4 py-12 sm:py-20">
-        <header className="mb-12 text-center sm:mb-20">
+        <header className="mb-12 text-center sm:mb-16">
           <h1 className="text-foreground mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
             配置教程
           </h1>
